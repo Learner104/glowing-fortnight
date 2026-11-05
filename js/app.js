@@ -2,7 +2,7 @@
  * App: Master Controller & Interactive HUD Coordinator
  * Integrated with Crew Manifest UI (Dhanesh, Gayathri, Girinanda, Devika, Sravan),
  * NASA Destination Touchdown, Collapsible Phase Info Cards, Cinema Mode,
- * and Distant Cinematic Chase Camera.
+ * Distant Cinematic Chase Camera, and NASA Landing & Fireworks Transition.
  */
 
 import { AudioSystem } from './audio.js';
@@ -69,6 +69,7 @@ class Application {
     this.activeHotspotId = null;
     this.isSyncingScroll = false;
     this.isPhaseCardVisible = true;
+    this.touchdownTransitionTriggered = false;
 
     this.initUI();
     this.initCrewManifest();
@@ -281,6 +282,29 @@ class Application {
         telemList.appendChild(item);
       }
     }
+
+    // If Phase 5 (NASA touchdown), append celebratory button directly on card!
+    const ctaRow = document.querySelector('.card-cta-row');
+    if (ctaRow) {
+      let celebBtn = document.getElementById('btn-card-celebration');
+      if (chapter.index === 4) {
+        if (!celebBtn) {
+          celebBtn = document.createElement('a');
+          celebBtn.id = 'btn-card-celebration';
+          celebBtn.href = 'landing.html';
+          celebBtn.className = 'btn-primary';
+          celebBtn.style.textDecoration = 'none';
+          celebBtn.style.background = 'linear-gradient(135deg, #00ff88, #00f0ff)';
+          celebBtn.style.color = '#04060d';
+          celebBtn.style.fontWeight = '800';
+          celebBtn.style.boxShadow = '0 0 20px rgba(0, 255, 136, 0.5)';
+          celebBtn.innerHTML = `<span>🎆 NASA LANDING CELEBRATION ➔</span>`;
+          ctaRow.appendChild(celebBtn);
+        }
+      } else if (celebBtn) {
+        celebBtn.remove();
+      }
+    }
   }
 
   setupTimelineScrubber() {
@@ -393,7 +417,6 @@ class Application {
         const toggleBtn = document.getElementById('btn-toggle-phase-card');
         if (toggleBtn) toggleBtn.click();
       } else if (e.key === 'z' || e.key === 'Z') {
-        // Toggle camera zoom distance (Close vs Distant)
         this.audio.playUiClick();
         if (this.timeline.baseChaseDistance >= 15.0) {
           this.timeline.baseChaseDistance = 10.0;
@@ -578,7 +601,30 @@ class Application {
     this.updateHUD(camFrame);
     this.drawAudioVisualizer();
 
+    // Check if reached Earth touchdown at NASA KSC (progress >= 0.995)
+    this.checkTouchdownTransition(camFrame.progress);
+
     requestAnimationFrame((t) => this.renderLoop(t));
+  }
+
+  checkTouchdownTransition(progress) {
+    if (progress >= 0.992 && !this.touchdownTransitionTriggered) {
+      this.touchdownTransitionTriggered = true;
+      const modal = document.getElementById('touchdown-transition-modal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        let countdown = 3;
+        const countdownEl = document.getElementById('touchdown-countdown');
+        const interval = setInterval(() => {
+          countdown--;
+          if (countdownEl) countdownEl.textContent = `${countdown}s`;
+          if (countdown <= 0) {
+            clearInterval(interval);
+            window.location.href = 'landing.html';
+          }
+        }, 1000);
+      }
+    }
   }
 
   updateHotspotsUI(hotspots) {

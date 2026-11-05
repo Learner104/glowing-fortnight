@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NASA Kennedy Space Center // Touchdown & Mission Celebration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=SF+Pro+Display:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #04060d;
+      --card-bg: rgba(9, 14, 26, 0.82);
+      --border-color: rgba(0, 240, 255, 0.3);
+      --neon-cyan: #00f0ff;
+      --neon-gold: #ffaa00;
+      --neon-purple: #bd00ff;
+      --neon-green: #00ff88;
+      --neon-red: #ff2a55;
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg-dark);
+      font-family: var(--font-sans);
+      color: #ffffff;
+    }
+
+    /* Fireworks & Scene Canvas */
+    #celebration-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: 1;
+      cursor: crosshair;
+    }
+
+    /* Cinematic Film Overlays */
+    .cinema-vignette {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background: radial-gradient(circle at center, transparent 35%, rgba(2, 4, 10, 0.75) 100%);
+      box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.9);
+    }
+
+    .cinema-scanlines {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+      background-size: 100% 4px;
+      opacity: 0.35;
+    }
+
+    /* UI Overlay Layer */
+    .ui-container {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 1.5rem 2.2rem;
+    }
+
+    /* Top Banner */
+    .nasa-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.75rem 1.4rem;
+      pointer-events: auto;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 240, 255, 0.1);
+      animation: slide-down 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes slide-down {
+      0% { opacity: 0; transform: translateY(-30px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    .nasa-brand {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .nasa-insignia {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0b3d91;
+      color: #ffffff;
+      font-weight: 900;
+      font-size: 0.85rem;
+      letter-spacing: 0.15em;
+      padding: 0.35rem 0.75rem;
+      border-radius: 4px;
+      border: 1px solid #fc3d21;
+      box-shadow: 0 0 12px rgba(252, 61, 33, 0.4);
+    }
+
+    .nasa-title-box {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .nasa-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: #ffffff;
+    }
+
+    .nasa-sub {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--neon-cyan);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .btn-action {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid var(--border-color);
+      color: #ffffff;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.45rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-action:hover {
+      background: var(--neon-cyan);
+      color: #04060d;
+      box-shadow: 0 0 16px var(--neon-cyan);
+    }
+
+    .btn-replay {
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(189, 0, 255, 0.2));
+      border-color: var(--neon-cyan);
+    }
+
+    /* Main Celebration Center Cards */
+    .celebration-center {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 2rem;
+      pointer-events: none;
+      margin-bottom: 1.5rem;
+    }
+
+    .celebration-center > * {
+      pointer-events: auto;
+    }
+
+    /* Landing Status & Credits Card */
+    .credits-card {
+      max-width: 460px;
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.6rem 1.8rem;
+      box-shadow: 0 16px 45px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 240, 255, 0.15);
+      animation: card-rise 1.0s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes card-rise {
+      0% { opacity: 0; transform: translateY(40px) scale(0.96); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .badge-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .touchdown-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(0, 255, 136, 0.15);
+      border: 1px solid var(--neon-green);
+      color: var(--neon-green);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      padding: 0.25rem 0.65rem;
+      border-radius: 4px;
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--neon-green);
+      box-shadow: 0 0 8px var(--neon-green);
+      animation: pulse 1.2s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(0.7); }
+    }
+
+    .credits-title {
+      font-size: 1.8rem;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      line-height: 1.1;
+      margin-bottom: 0.35rem;
+      background: linear-gradient(90deg, #ffffff, var(--neon-cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .credits-sub {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--neon-gold);
+      margin-bottom: 1.2rem;
+    }
+
+    /* Creators Highlight Box (UNKNOWN) */
+    .creators-box {
+      background: rgba(0, 0, 0, 0.45);
+      border: 1.5px dashed var(--neon-purple);
+      border-radius: 8px;
+      padding: 0.9rem 1.1rem;
+      margin-bottom: 1.25rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .creators-box::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(189, 0, 255, 0.1) 0%, transparent 70%);
+      pointer-events: none;
+      animation: rotate-glow 6s linear infinite;
+    }
+
+    @keyframes rotate-glow {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .creators-label {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: #b095d4;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 0.25rem;
+    }
+
+    .creators-value {
+      font-size: 1.6rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      color: #ffffff;
+      text-shadow: 0 0 18px var(--neon-purple), 0 0 35px var(--neon-cyan);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .classified-tag {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--neon-purple);
+      background: rgba(189, 0, 255, 0.15);
+      border: 1px solid var(--neon-purple);
+      padding: 0.15rem 0.45rem;
+      border-radius: 3px;
+      letter-spacing: 0.05em;
+    }
+
+    /* Crew Manifest Tribute */
+    .crew-tribute-title {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: #8fa0ba;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.6rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 0.85rem;
+    }
+
+    .crew-tribute-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.45rem;
+      margin-bottom: 1.1rem;
+    }
+
+    .crew-chip {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 5px;
+      padding: 0.35rem 0.55rem;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .chip-name {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .chip-role {
+      font-size: 0.6rem;
+      color: var(--neon-cyan);
+    }
+
+    /* Interactive Fireworks Control Bar */
+    .fireworks-control-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.85rem 1.4rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    }
+
+    .btn-firework {
+      background: linear-gradient(135deg, #ff2a55, #ffaa00);
+      color: #ffffff;
+      border: none;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 800;
+      padding: 0.6rem 1.3rem;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(255, 42, 85, 0.5);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-firework:hover {
+      filter: brightness(1.2);
+      transform: scale(1.04);
+      box-shadow: 0 0 30px rgba(255, 42, 85, 0.8);
+    }
+
+    .click-hint {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--neon-cyan);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Bottom Status Strip */
+    .bottom-strip {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: #6a7c98;
+      background: rgba(4, 6, 13, 0.75);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      padding: 0.5rem 1rem;
+      pointer-events: auto;
+    }
+
+    .coords-tag {
+      color: var(--neon-gold);
+    }
+
+    @media (max-width: 900px) {
+      .ui-container {
+        padding: 1rem;
+      }
+      .celebration-center {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .credits-card {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Canvas: Real-time 3D Runway & Particle Fireworks Display -->
+  <canvas id="celebration-canvas"></canvas>
+
+  <!-- Cinema Post-processing -->
+  <div class="cinema-vignette"></div>
+  <div class="cinema-scanlines"></div>
+
+  <!-- UI HUD Layer -->
+  <div class="ui-container">
+    <!-- Top Header -->
+    <header class="nasa-header">
+      <div class="nasa-brand">
+        <div class="nasa-insignia">NASA</div>
+        <div class="nasa-title-box">
+          <div class="nasa-title">KENNEDY SPACE CENTER // SHUTTLE LANDING FACILITY</div>
+          <div class="nasa-sub">MISSION CHRONO-7 // TOUCHDOWN CONFIRMED</div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn-action" id="btn-sound-toggle" title="Toggle Sound [M]">
+          <span id="sound-icon">🔊</span>
+          <span id="sound-label">SOUND: ON</span>
+        </button>
+        <a href="index.html" class="btn-action btn-replay" style="text-decoration: none;">
+          <span>🔁 REPLAY MISSION</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- Center Content: Celebration Card & Controls -->
+    <main class="celebration-center">
+      <div class="credits-card">
+        <div class="badge-row">
+          <div class="touchdown-badge">
+            <div class="live-dot"></div>
+            <span>RUNWAY 15/33 // TOUCHDOWN CONFIRMED</span>
+          </div>
+        </div>
+
+        <h1 class="credits-title">WELCOME HOME</h1>
+        <div class="credits-sub">PROJECT CHRONO-7 MAIDEN FLIGHT COMPLETE</div>
+
+        <!-- Creators: UNKNOWN -->
+        <div class="creators-box">
+          <div class="creators-label">MISSION ARCHITECTS & CREATORS</div>
+          <div class="creators-value">
+            <span>UNKNOWN</span>
+            <span class="classified-tag">CLASSIFIED</span>
+          </div>
+        </div>
+
+        <!-- Spacecraft Crew Tribute -->
+        <div class="crew-tribute-title">SPACE CRAFT CREW RECOGNITION</div>
+        <div class="crew-tribute-grid">
+          <div class="crew-chip">
+            <span>👨‍🚀</span>
+            <div>
+              <div class="chip-name">DHANESH</div>
+              <div class="chip-role">Commander</div>
+            </div>
+          </div>
+          <div class="crew-chip">
+            <span>👩‍🚀</span>
+            <div>
+              <div class="chip-name">GAYATHRI</div>
+              <div class="chip-role">Navigator</div>
+            </div>
+          </div>
+          <div class="crew-chip">
+            <span>👩‍🚀</span>
+            <div>
+              <div class="chip-name">GIRINANDA</div>
+              <div class="chip-role">Engineer</div>
+            </div>
+          </div>
+          <div class="crew-chip">
+            <span>👩‍🚀</span>
+            <div>
+              <div class="chip-name">DEVIKA</div>
+              <div class="chip-role">Specialist</div>
+            </div>
+          </div>
+          <div class="crew-chip" style="grid-column: span 2;">
+            <span>👨‍🚀</span>
+            <div>
+              <div class="chip-name">SRAVAN</div>
+              <div class="chip-role">Propulsion Lead</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="font-size: 0.75rem; color: #8a9bb8; line-height: 1.4;">
+          The spacecraft has cleared Earth atmospheric ionization and safely docked at NASA KSC. Celebratory flares active across Cape Canaveral airspace.
+        </div>
+      </div>
+
+      <!-- Fireworks Trigger Bar -->
+      <div class="fireworks-control-bar">
+        <button class="btn-firework" id="btn-launch-firework">
+          <span>🎆 LAUNCH FIREWORK BARRAGE</span>
+        </button>
+        <div class="click-hint">
+          <span>✨ CLICK SKY TO SHOOT FIREWORKS</span>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Status Strip -->
+    <footer class="bottom-strip">
+      <div>
+        <span>LOCATION: </span>
+        <span class="coords-tag">CAPE CANAVERAL, FLORIDA [28.5721° N, 80.6480° W]</span>
+      </div>
+      <div>
+        <span>STATUS: </span>
+        <span style="color: var(--neon-green);">ALL SYSTEMS NOMINAL // CELEBRATION IN PROGRESS</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Audio & Fireworks Simulation Script -->
+  <script>
+    // 1. Audio Synthesis for Fireworks Launch & Booms
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.isMuted = false;
+        this.init();
+      }
+
+      init() {
+        if (this.ctx) return;
+        try {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) this.ctx = new AudioCtx();
+        } catch (_) {}
+      }
+
+      playLaunch() {
+        if (!this.ctx || this.isMuted) return;
+        try {
+          const now = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(300, now);
+          osc.frequency.exponentialRampToValueAtTime(1400, now + 0.4);
+
+          gain.gain.setValueAtTime(0.04, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.4);
+        } catch (_) {}
+      }
+
+      playBoom() {
+        if (!this.ctx || this.isMuted) return;
+        try {
+          const now = this.ctx.currentTime;
+
+          // Sub-bass detonation
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(140, now);
+          osc.frequency.exponentialRampToValueAtTime(35, now + 0.8);
+
+          gain.gain.setValueAtTime(0.25, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.8);
+
+          // Crackle burst noise
+          const bufferSize = this.ctx.sampleRate * 0.4;
+          const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+          const output = noiseBuffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            output[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.2));
+          }
+
+          const whiteNoise = this.ctx.createBufferSource();
+          whiteNoise.buffer = noiseBuffer;
+
+          const filter = this.ctx.createBiquadFilter();
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(1200, now);
+
+          const noiseGain = this.ctx.createGain();
+          noiseGain.gain.setValueAtTime(0.08, now);
+          noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+          whiteNoise.connect(filter);
+          filter.connect(noiseGain);
+          noiseGain.connect(this.ctx.destination);
+
+          whiteNoise.start(now);
+        } catch (_) {}
+      }
+
+      toggleMute() {
+        this.isMuted = !this.isMuted;
+        return this.isMuted;
+      }
+    }
+
+    const sound = new SoundEngine();
+
+    // 2. High-Performance Particle Fireworks Engine
+    const canvas = document.getElementById('celebration-canvas');
+    const ctx = canvas.getContext('2d');
+
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+
+    function resize() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Palettes
+    const COLOR_PALETTES = [
+      ['#ff2a55', '#ff7300', '#ffea00', '#ffffff'], // Gold & Crimson
+      ['#00f0ff', '#0099ff', '#ffffff', '#bd00ff'], // Cyber Cyan & Violet
+      ['#00ff88', '#2effb0', '#ffffff', '#00f0ff'], // Emerald Neon
+      ['#bd00ff', '#ff2a8d', '#ffffff', '#ffaa00'], // Royal Magenta
+      ['#ffffff', '#ffdd55', '#ff9900', '#ffffff']  // Classic Star Gold
+    ];
+
+    class FireworkRocket {
+      constructor(targetX, targetY) {
+        this.x = width * 0.5 + (Math.random() - 0.5) * (width * 0.6);
+        this.y = height;
+        this.targetX = targetX || (width * 0.2 + Math.random() * width * 0.6);
+        this.targetY = targetY || (height * 0.12 + Math.random() * height * 0.38);
+
+        const dx = this.targetX - this.x;
+        const dy = this.targetY - this.y;
+        const dist = Math.hypot(dx, dy);
+
+        const speed = 12 + Math.random() * 4;
+        this.vx = (dx / dist) * speed;
+        this.vy = (dy / dist) * speed;
+
+        this.trail = [];
+        this.color = '#ffdd66';
+        this.palette = COLOR_PALETTES[Math.floor(Math.random() * COLOR_PALETTES.length)];
+        this.isDead = false;
+
+        sound.playLaunch();
+      }
+
+      update() {
+        this.trail.push({ x: this.x, y: this.y, alpha: 1.0 });
+        if (this.trail.length > 8) this.trail.shift();
+
+        this.x += this.vx;
+        this.y += this.vy;
+
+        // Check if reached destination
+        if (this.vy < 0 && this.y <= this.targetY) {
+          this.explode();
+          this.isDead = true;
+        }
+      }
+
+      explode() {
+        sound.playBoom();
+        const count = 90 + Math.floor(Math.random() * 50);
+        const burstSpeed = 4.5 + Math.random() * 4;
+
+        for (let i = 0; i < count; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = Math.random() * burstSpeed;
+          const col = this.palette[Math.floor(Math.random() * this.palette.length)];
+          particles.push(new FireworkParticle(this.x, this.y, Math.cos(angle) * speed, Math.sin(angle) * speed, col));
+        }
+      }
+
+      draw(c) {
+        c.save();
+        c.lineWidth = 2.5;
+        c.strokeStyle = this.color;
+        c.beginPath();
+        for (let i = 0; i < this.trail.length; i++) {
+          const pt = this.trail[i];
+          if (i === 0) c.moveTo(pt.x, pt.y);
+          else c.lineTo(pt.x, pt.y);
+        }
+        c.stroke();
+        c.restore();
+      }
+    }
+
+    class FireworkParticle {
+      constructor(x, y, vx, vy, color) {
+        this.x = x;
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+        this.color = color;
+        this.alpha = 1.0;
+        this.decay = 0.012 + Math.random() * 0.014;
+        this.gravity = 0.08;
+        this.drag = 0.965;
+        this.size = 2.0 + Math.random() * 2.0;
+        this.sparkle = Math.random() > 0.4;
+      }
+
+      update() {
+        this.vx *= this.drag;
+        this.vy = this.vy * this.drag + this.gravity;
+        this.x += this.vx;
+        this.y += this.vy;
+        this.alpha -= this.decay;
+      }
+
+      draw(c) {
+        if (this.alpha <= 0) return;
+        c.save();
+        c.globalAlpha = Math.max(0, this.alpha);
+        c.fillStyle = this.color;
+        c.shadowColor = this.color;
+        c.shadowBlur = 8;
+
+        const currentSize = this.sparkle && Math.random() > 0.5 ? this.size * 1.5 : this.size;
+        c.beginPath();
+        c.arc(this.x, this.y, currentSize, 0, Math.PI * 2);
+        c.fill();
+        c.restore();
+      }
+    }
+
+    const rockets = [];
+    const particles = [];
+
+    // Launch Firework
+    function launchFirework(tx, ty) {
+      sound.init();
+      rockets.push(new FireworkRocket(tx, ty));
+    }
+
+    // Launch Barrage
+    function launchBarrage() {
+      for (let i = 0; i < 5; i++) {
+        setTimeout(() => {
+          launchFirework();
+        }, i * 220);
+      }
+    }
+
+    // Initial Automatic Fireworks
+    setTimeout(() => {
+      launchBarrage();
+    }, 600);
+
+    // Continuous ambient fireworks
+    let timer = 0;
+    function loop() {
+      timer++;
+      if (timer % 90 === 0 && rockets.length < 4) {
+        launchFirework();
+      }
+
+      // Draw background fade for light trails
+      ctx.fillStyle = 'rgba(4, 6, 13, 0.22)';
+      ctx.fillRect(0, 0, width, height);
+
+      // Draw Horizon Runway Lights & Spacecraft Silhouette at bottom
+      drawRunwaySilhouette(ctx);
+
+      // Update & Draw Rockets
+      for (let i = rockets.length - 1; i >= 0; i--) {
+        const r = rockets[i];
+        r.update();
+        r.draw(ctx);
+        if (r.isDead) rockets.splice(i, 1);
+      }
+
+      // Update & Draw Particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.update();
+        p.draw(ctx);
+        if (p.alpha <= 0) particles.splice(i, 1);
+      }
+
+      requestAnimationFrame(loop);
+    }
+
+    // Draw NASA Runway Silhouette with Landing Lights & Spacecraft
+    function drawRunwaySilhouette(c) {
+      c.save();
+      const horizonY = height * 0.78;
+
+      // Runway tarmac
+      c.fillStyle = '#080c18';
+      c.beginPath();
+      c.moveTo(width * 0.15, height);
+      c.lineTo(width * 0.42, horizonY);
+      c.lineTo(width * 0.58, horizonY);
+      c.lineTo(width * 0.85, height);
+      c.closePath();
+      c.fill();
+
+      // Glowing Centerline
+      c.strokeStyle = 'rgba(0, 240, 255, 0.6)';
+      c.lineWidth = 2;
+      c.setLineDash([12, 10]);
+      c.beginPath();
+      c.moveTo(width * 0.5, height);
+      c.lineTo(width * 0.5, horizonY);
+      c.stroke();
+      c.setLineDash([]);
+
+      // Runway Edge Lights (Green & Amber)
+      const count = 12;
+      for (let i = 0; i <= count; i++) {
+        const t = i / count;
+        const ly = horizonY + t * (height - horizonY);
+        const lx1 = width * 0.42 - t * (width * 0.42 - width * 0.15);
+        const lx2 = width * 0.58 + t * (width * 0.85 - width * 0.58);
+
+        c.fillStyle = '#ffaa00';
+        c.shadowColor = '#ffaa00';
+        c.shadowBlur = 6;
+        c.fillRect(lx1 - 2, ly - 2, 4, 4);
+
+        c.fillStyle = '#00ff88';
+        c.shadowColor = '#00ff88';
+        c.shadowBlur = 6;
+        c.fillRect(lx2 - 2, ly - 2, 4, 4);
+      }
+
+      // Starfighter Silhouette at Center Runway (Parked)
+      const shipX = width * 0.5;
+      const shipY = horizonY + (height - horizonY) * 0.45;
+      const s = 1.6;
+
+      c.fillStyle = '#0e1424';
+      c.strokeStyle = '#00f0ff';
+      c.lineWidth = 1.5;
+      c.shadowColor = '#00f0ff';
+      c.shadowBlur = 10;
+
+      c.beginPath();
+      // Nose
+      c.moveTo(shipX, shipY - 32 * s);
+      // Right wing
+      c.lineTo(shipX + 45 * s, shipY + 12 * s);
+      c.lineTo(shipX + 38 * s, shipY + 20 * s);
+      c.lineTo(shipX + 12 * s, shipY + 14 * s);
+      // Right engine
+      c.lineTo(shipX + 10 * s, shipY + 24 * s);
+      c.lineTo(shipX - 10 * s, shipY + 24 * s);
+      // Left engine
+      c.lineTo(shipX - 12 * s, shipY + 14 * s);
+      c.lineTo(shipX - 38 * s, shipY + 20 * s);
+      // Left wing
+      c.lineTo(shipX - 45 * s, shipY + 12 * s);
+      c.closePath();
+      c.fill();
+      c.stroke();
+
+      // Cyan Cooling Glow on Engines
+      c.fillStyle = '#00f0ff';
+      c.beginPath();
+      c.arc(shipX - 10 * s, shipY + 22 * s, 3, 0, Math.PI * 2);
+      c.arc(shipX + 10 * s, shipY + 22 * s, 3, 0, Math.PI * 2);
+      c.fill();
+
+      c.restore();
+    }
+
+    requestAnimationFrame(loop);
+
+    // Event Listeners
+    canvas.addEventListener('click', (e) => {
+      sound.init();
+      launchFirework(e.clientX, e.clientY);
+    });
+
+    document.getElementById('btn-launch-firework').addEventListener('click', () => {
+      sound.init();
+      launchBarrage();
+    });
+
+    const soundBtn = document.getElementById('btn-sound-toggle');
+    const soundIcon = document.getElementById('sound-icon');
+    const soundLabel = document.getElementById('sound-label');
+
+    soundBtn.addEventListener('click', () => {
+      sound.init();
+      const muted = sound.toggleMute();
+      soundIcon.textContent = muted ? '🔇' : '🔊';
+      soundLabel.textContent = muted ? 'SOUND: OFF' : 'SOUND: ON';
+    });
+
+    // Spacebar to trigger fireworks
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        sound.init();
+        launchBarrage();
+      } else if (e.key === 'm' || e.key === 'M') {
+        soundBtn.click();
+      }
+    });
+  </script>
+</body>
+</html>
