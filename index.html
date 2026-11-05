@@ -1364,7 +1364,7 @@ body.cinema-mode-active .nasa-destination-pill {
 
           <div class="scroll-hint">
             <div class="mouse-icon"></div>
-            <span>SCROLL PAGE // DRAG SCRUBBER // CLICK PLAY REEL</span>
+            <span>SCROLL PAGE // DRAG SCRUBBER // CLICK PLAY REEL // [Z] TOGGLE ZOOM</span>
           </div>
 
           <div class="controls-right">
@@ -3080,6 +3080,7 @@ class WebGLRenderer {
 /**
  * Timeline: Cinematic Camera Choreography & Physics-based Video Scroll Engine
  * Featuring Smoothed Exponential Interpolation, Planet Flybys, and NASA Touchdown.
+ * CAM 1: Distant third-person cinematic chase camera with wider breathing room.
  */
 
 
@@ -3162,48 +3163,13 @@ const CHAPTERS = [
   }
 ];
 
-// 5 Cinematic Camera Waypoints along the scroll track
-const CAMERA_KEYFRAMES = [
-  // 0: Phase 1 - Low angle heroic departure
-  {
-    scroll: 0.0,
-    camPos: new Vec3(2.5, -0.6, 5.2),
-    camTarget: new Vec3(0, 0.4, 0.0),
-    shipPos: new Vec3(0, 0, 0),
-    fov: 46
-  },
-  // 1: Phase 2 - High-speed rear chase camera past Mars
-  {
-    scroll: 0.25,
-    camPos: new Vec3(0.0, 1.6, 6.8),
-    camTarget: new Vec3(0, 0.2, -4.0),
-    shipPos: new Vec3(0, 0, -50),
-    fov: 52
-  },
-  // 2: Phase 3 - Sweeping side dynamic orbit past the Moon
-  {
-    scroll: 0.50,
-    camPos: new Vec3(-7.5, 3.2, 3.5),
-    camTarget: new Vec3(0, 0.2, 0.0),
-    shipPos: new Vec3(0, 0, -120),
-    fov: 48
-  },
-  // 3: Phase 4 - Dramatic frontal face-to-face Earth re-entry
-  {
-    scroll: 0.75,
-    camPos: new Vec3(1.8, 1.2, -7.5),
-    camTarget: new Vec3(0, 0.1, -0.5),
-    shipPos: new Vec3(0, 0, -220),
-    fov: 50
-  },
-  // 4: Phase 5 - NASA Runway touchdown elevation
-  {
-    scroll: 1.0,
-    camPos: new Vec3(4.5, 2.2, 6.0),
-    camTarget: new Vec3(0, 0.2, 0.0),
-    shipPos: new Vec3(0, -0.3, -320),
-    fov: 44
-  }
+// Ship flight waypoints along the Z corridor
+const SHIP_WAYPOINTS = [
+  { scroll: 0.0,  pos: new Vec3(0, 0.0, 0) },
+  { scroll: 0.25, pos: new Vec3(0, 0.0, -60) },
+  { scroll: 0.50, pos: new Vec3(0, 0.0, -140) },
+  { scroll: 0.75, pos: new Vec3(0, 0.0, -230) },
+  { scroll: 1.0,  pos: new Vec3(0, -0.4, -320) }
 ];
 
 class TimelineController {
@@ -3221,7 +3187,11 @@ class TimelineController {
     // Camera Mode: 'CHASE' | 'COCKPIT' | 'ORBIT'
     this.cameraMode = 'CHASE';
 
-    // Interactive free rotation angles for Phase 5 / inspect mode
+    // Distant Chase Camera settings (feels like looking from a cinematic distance)
+    this.baseChaseDistance = 16.5;
+    this.baseChaseHeight = 4.2;
+
+    // Interactive free rotation angles for Orbit mode
     this.orbitYaw = 0.6;
     this.orbitPitch = 0.3;
     this.targetOrbitYaw = 0.6;
@@ -3336,8 +3306,8 @@ class TimelineController {
   calculateCameraFrame() {
     const p = this.currentProgress;
 
-    // Find bounding keyframe indices
-    const keys = CAMERA_KEYFRAMES;
+    // Interpolate spacecraft position along the flight runway
+    const keys = SHIP_WAYPOINTS;
     let segIndex = 0;
     for (let i = 0; i < keys.length - 1; i++) {
       if (p >= keys[i].scroll && p <= keys[i + 1].scroll) {
@@ -3355,36 +3325,53 @@ class TimelineController {
     const rawT = segDuration > 0.0001 ? (p - k1.scroll) / segDuration : 0;
     const t = clamp(rawT, 0, 1);
 
-    // Smooth spline interpolated positions
-    const camPos = catmullRomVec3(k0.camPos, k1.camPos, k2.camPos, k3.camPos, t);
-    const camTarget = catmullRomVec3(k0.camTarget, k1.camTarget, k2.camTarget, k3.camTarget, t);
-    const shipPos = catmullRomVec3(k0.shipPos, k1.shipPos, k2.shipPos, k3.shipPos, t);
+    const shipPos = catmullRomVec3(k0.pos, k1.pos, k2.pos, k3.pos, t);
 
-    // Subtle gentle engine hover vibration (diminishes on touchdown in Phase 5)
-    const hoverAmplitude = Math.max(0.01, 0.06 * (1.0 - Math.pow(p, 4.0)));
+    // Subtle gentle engine hover vibration (settles smoothly upon touchdown in Phase 5)
+    const hoverAmplitude = Math.max(0.005, 0.05 * (1.0 - Math.pow(p, 4.0)));
     const idleHover = Math.sin(this.elapsedTime * 2.2) * hoverAmplitude;
     shipPos.y += idleHover;
 
-    // Camera Mode overrides
+    const camPos = new Vec3();
+    const camTarget = new Vec3();
+
+    // 1. COCKPIT MODE (Inside the flight bridge)
     if (this.cameraMode === 'COCKPIT') {
       camPos.set(shipPos.x, shipPos.y + 0.65, shipPos.z - 0.9);
-      camTarget.set(shipPos.x + this.mouseX * 2.0, shipPos.y + 0.5 - this.mouseY * 1.5, shipPos.z - 15.0);
-    } else if (this.cameraMode === 'ORBIT') {
-      const radius = 7.5;
+      camTarget.set(shipPos.x + this.mouseX * 2.0, shipPos.y + 0.5 - this.mouseY * 1.5, shipPos.z - 18.0);
+    }
+    // 2. ORBIT 360 MODE (Free user drag rotation with distant vantage)
+    else if (this.cameraMode === 'ORBIT') {
+      const radius = 14.5;
       camPos.x = shipPos.x + Math.sin(this.orbitYaw) * Math.cos(this.orbitPitch) * radius;
       camPos.y = shipPos.y + Math.sin(this.orbitPitch) * radius;
       camPos.z = shipPos.z + Math.cos(this.orbitYaw) * Math.cos(this.orbitPitch) * radius;
-      camTarget.copy(shipPos).add(new Vec3(0, 0.3, 0));
-    } else {
-      camPos.x += this.mouseX * 1.2;
-      camPos.y += -this.mouseY * 0.8;
-      camTarget.x += this.mouseX * 0.5;
+      camTarget.copy(shipPos).add(new Vec3(0, 0.4, 0));
+    }
+    // 3. CAM 1: DISTANT CINEMATIC CHASE CAMERA
+    // Positioned at a majestic distance behind and above the spacecraft.
+    // Gives breathing room to view the entire craft, glowing engine exhaust, planets, and gates.
+    else {
+      const boostPullback = this.isBoosting ? 3.5 : 0;
+      const speedPullback = Math.min(2.5, Math.abs(this.scrollVelocity) * 0.9);
+      const chaseDistance = this.baseChaseDistance + boostPullback + speedPullback;
+      const chaseHeight = this.baseChaseHeight;
+
+      // Camera positioned at a cinematic distance behind the ship with graceful parallax
+      camPos.x = shipPos.x + this.mouseX * 2.2;
+      camPos.y = shipPos.y + chaseHeight - this.mouseY * 1.1;
+      camPos.z = shipPos.z + chaseDistance;
+
+      // Focus camera slightly ahead through the nose of the ship
+      camTarget.x = shipPos.x + this.mouseX * 0.8;
+      camTarget.y = shipPos.y + 0.5 - this.mouseY * 0.4;
+      camTarget.z = shipPos.z - 15.0;
     }
 
-    // Ship flight banking
+    // Ship flight banking (reacts to mouse steering)
     const roll = this.mouseX * -0.5 - this.scrollVelocity * 0.12;
-    const pitch = this.mouseY * 0.32 + (this.isBoosting ? -0.15 : 0) + (p > 0.95 ? -0.05 : 0);
-    const yaw = this.mouseX * -0.28;
+    const pitch = this.mouseY * 0.32 + (this.isBoosting ? -0.15 : 0) + (p > 0.95 ? -0.04 : 0);
+    const yaw = this.mouseX * -0.26;
 
     return {
       camPos,
@@ -3416,7 +3403,8 @@ class TimelineController {
 /**
  * App: Master Controller & Interactive HUD Coordinator
  * Integrated with Crew Manifest UI (Dhanesh, Gayathri, Girinanda, Devika, Sravan),
- * NASA Destination Touchdown, and Collapsible/Hideable Phase Info Cards + Cinema Mode.
+ * NASA Destination Touchdown, Collapsible Phase Info Cards, Cinema Mode,
+ * and Distant Cinematic Chase Camera.
  */
 
 
@@ -3806,6 +3794,16 @@ class Application {
       } else if (e.key === 'i' || e.key === 'I') {
         const toggleBtn = document.getElementById('btn-toggle-phase-card');
         if (toggleBtn) toggleBtn.click();
+      } else if (e.key === 'z' || e.key === 'Z') {
+        // Toggle camera zoom distance (Close vs Distant)
+        this.audio.playUiClick();
+        if (this.timeline.baseChaseDistance >= 15.0) {
+          this.timeline.baseChaseDistance = 10.0;
+          this.timeline.baseChaseHeight = 2.8;
+        } else {
+          this.timeline.baseChaseDistance = 16.5;
+          this.timeline.baseChaseHeight = 4.2;
+        }
       } else if (e.key === 'm' || e.key === 'M') {
         this.toggleAudioMute();
       } else if (e.key >= '1' && e.key <= '5') {

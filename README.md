@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # PROJECT CHRONO-7 // AEGIS QUANTUM FIGHTER
 ### NASA Mission Return & Crew Telemetry // 3D Cinematic Scroll Experience
 
@@ -63,6 +62,3 @@ Open directly in any browser:
 file:///home/learner/.gemini/antigravity/scratch/cinematic-scroll/index.html
 ```
 *(Or [standalone.html](file:///home/learner/.gemini/antigravity/scratch/cinematic-scroll/standalone.html))*
-=======
-# glowing-fortnight
->>>>>>> 96cf3b6a197f36eb57dcac10a914e3556fded556

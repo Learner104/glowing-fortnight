@@ -1,7 +1,8 @@
 /**
  * App: Master Controller & Interactive HUD Coordinator
  * Integrated with Crew Manifest UI (Dhanesh, Gayathri, Girinanda, Devika, Sravan),
- * NASA Destination Touchdown, and Collapsible/Hideable Phase Info Cards + Cinema Mode.
+ * NASA Destination Touchdown, Collapsible Phase Info Cards, Cinema Mode,
+ * and Distant Cinematic Chase Camera.
  */
 
 import { AudioSystem } from './audio.js';
@@ -391,6 +392,16 @@ class Application {
       } else if (e.key === 'i' || e.key === 'I') {
         const toggleBtn = document.getElementById('btn-toggle-phase-card');
         if (toggleBtn) toggleBtn.click();
+      } else if (e.key === 'z' || e.key === 'Z') {
+        // Toggle camera zoom distance (Close vs Distant)
+        this.audio.playUiClick();
+        if (this.timeline.baseChaseDistance >= 15.0) {
+          this.timeline.baseChaseDistance = 10.0;
+          this.timeline.baseChaseHeight = 2.8;
+        } else {
+          this.timeline.baseChaseDistance = 16.5;
+          this.timeline.baseChaseHeight = 4.2;
+        }
       } else if (e.key === 'm' || e.key === 'M') {
         this.toggleAudioMute();
       } else if (e.key >= '1' && e.key <= '5') {
