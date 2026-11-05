@@ -1,5 +1,6 @@
 /**
- * Scene: Procedural 3D Geometry for Starfighter, Warp Gates, Monoliths, and Starfield
+ * Scene: Procedural 3D Geometry for Starfighter, Planets (Earth, Mars, Moon),
+ * NASA Landing Facility, Warp Gates, Monoliths, and Starfield.
  */
 
 import { Vec3 } from './math3d.js';
@@ -27,6 +28,137 @@ export class MeshData {
     this.indices.push(i1, i2, i3);
     this.indices.push(i1, i3, i4);
   }
+}
+
+/**
+ * Builds procedural low-load spheres for planets (Earth, Mars, Moon)
+ */
+export function buildPlanetMesh(radius = 10.0, rings = 16, sectors = 16, type = 'earth') {
+  const mesh = new MeshData();
+
+  for (let r = 0; r <= rings; r++) {
+    const theta = (r * Math.PI) / rings;
+    const sinT = Math.sin(theta);
+    const cosT = Math.cos(theta);
+
+    for (let s = 0; s <= sectors; s++) {
+      const phi = (s * 2 * Math.PI) / sectors;
+      const cosP = Math.cos(phi);
+      const sinP = Math.sin(phi);
+
+      const nx = cosP * sinT;
+      const ny = cosT;
+      const nz = sinP * sinT;
+
+      const x = nx * radius;
+      const y = ny * radius;
+      const z = nz * radius;
+
+      // Color generation based on planet type
+      let cr = 0.5, cg = 0.5, cb = 0.5, ca = 1.0;
+
+      // Procedural noise approximation using sine harmonics
+      const noise = Math.sin(phi * 4.0) * Math.cos(theta * 3.0) + Math.sin(phi * 8.0 + theta * 5.0) * 0.4;
+
+      if (type === 'earth') {
+        if (Math.abs(ny) > 0.82) {
+          // Polar ice caps
+          cr = 0.92; cg = 0.96; cb = 1.0;
+        } else if (noise > 0.15) {
+          // Continents / Green & Sahara ochre
+          cr = 0.22 + noise * 0.2;
+          cg = 0.48 + noise * 0.15;
+          cb = 0.25;
+        } else if (noise > -0.05) {
+          // Swirling white clouds
+          cr = 0.88; cg = 0.92; cb = 0.98;
+        } else {
+          // Deep oceans
+          cr = 0.08; cg = 0.28; cb = 0.72;
+        }
+      } else if (type === 'mars') {
+        if (Math.abs(ny) > 0.86) {
+          // Mars North/South Polar Ice
+          cr = 0.95; cg = 0.92; cb = 0.92;
+        } else {
+          // Red-ochre Martian regolith and dark basalt maria
+          const darkMaria = noise > 0.2 ? 0.65 : 1.0;
+          cr = (0.85 + noise * 0.1) * darkMaria;
+          cg = (0.35 + noise * 0.08) * darkMaria;
+          cb = (0.18 + noise * 0.05) * darkMaria;
+        }
+      } else if (type === 'moon') {
+        // Lunar grey with crater maria
+        const mare = noise > 0.1 ? 0.55 : 0.78;
+        cr = mare + noise * 0.05;
+        cg = mare + noise * 0.05;
+        cb = mare * 1.05;
+      }
+
+      mesh.addVertex(x, y, z, nx, ny, nz, cr, cg, cb, ca);
+    }
+  }
+
+  for (let r = 0; r < rings; r++) {
+    for (let s = 0; s < sectors; s++) {
+      const first = r * (sectors + 1) + s;
+      const second = first + sectors + 1;
+
+      mesh.addTriangle(first, second, first + 1);
+      mesh.addTriangle(second, second + 1, first + 1);
+    }
+  }
+
+  return mesh;
+}
+
+/**
+ * Builds NASA Kennedy Space Center Landing Runway & Touchdown Guidance Grid
+ */
+export function buildNasaRunwayMesh() {
+  const mesh = new MeshData();
+
+  // Runway strip: 24m wide, 140m long at destination
+  const rwW = 12.0;
+  const rwLen = 70.0;
+  const rwColor = [0.08, 0.10, 0.14, 1.0];
+  const lineCol = [0.0, 0.95, 1.0, 1.0];
+  const amberCol = [1.0, 0.7, 0.1, 1.0];
+
+  // Runway Tarmac plane
+  const i1 = mesh.addVertex(-rwW, -1.5, -rwLen, 0, 1, 0, ...rwColor);
+  const i2 = mesh.addVertex(rwW, -1.5, -rwLen, 0, 1, 0, ...rwColor);
+  const i3 = mesh.addVertex(rwW, -1.5, rwLen, 0, 1, 0, ...rwColor);
+  const i4 = mesh.addVertex(-rwW, -1.5, rwLen, 0, 1, 0, ...rwColor);
+  mesh.addQuad(i1, i2, i3, i4);
+
+  // Centerline Dashes
+  for (let z = -rwLen + 5; z < rwLen - 5; z += 12) {
+    const c1 = mesh.addVertex(-0.4, -1.48, z - 3, 0, 1, 0, ...lineCol);
+    const c2 = mesh.addVertex(0.4, -1.48, z - 3, 0, 1, 0, ...lineCol);
+    const c3 = mesh.addVertex(0.4, -1.48, z + 3, 0, 1, 0, ...lineCol);
+    const c4 = mesh.addVertex(-0.4, -1.48, z + 3, 0, 1, 0, ...lineCol);
+    mesh.addQuad(c1, c2, c3, c4);
+  }
+
+  // Runway Approach Edge Guidance Lights (dual rows of glowing beacons)
+  for (let z = -rwLen; z <= rwLen; z += 10) {
+    // Left edge light
+    const l1 = mesh.addVertex(-rwW - 0.3, -1.45, z - 0.4, 0, 1, 0, ...amberCol);
+    const l2 = mesh.addVertex(-rwW + 0.3, -1.45, z - 0.4, 0, 1, 0, ...amberCol);
+    const l3 = mesh.addVertex(-rwW + 0.3, -1.45, z + 0.4, 0, 1, 0, ...amberCol);
+    const l4 = mesh.addVertex(-rwW - 0.3, -1.45, z + 0.4, 0, 1, 0, ...amberCol);
+    mesh.addQuad(l1, l2, l3, l4);
+
+    // Right edge light
+    const r1 = mesh.addVertex(rwW - 0.3, -1.45, z - 0.4, 0, 1, 0, ...amberCol);
+    const r2 = mesh.addVertex(rwW + 0.3, -1.45, z - 0.4, 0, 1, 0, ...amberCol);
+    const r3 = mesh.addVertex(rwW + 0.3, -1.45, z + 0.4, 0, 1, 0, ...amberCol);
+    const r4 = mesh.addVertex(rwW - 0.3, -1.45, z + 0.4, 0, 1, 0, ...amberCol);
+    mesh.addQuad(r1, r2, r3, r4);
+  }
+
+  return mesh;
 }
 
 /**
@@ -59,21 +191,18 @@ export function buildStarfighterMesh(hullColor = [0.15, 0.18, 0.24], neonColor =
   }
 
   // 1. NOSE CONE & MAIN FUSELAGE
-  // Nose tip
   const nose = [0, 0.1, -4.2];
-  // Mid body vertices
   const midTop = [0, 0.65, -0.6];
   const midLeft = [-0.9, 0.15, -0.4];
   const midRight = [0.9, 0.15, -0.4];
   const midBottom = [0, -0.35, -0.4];
 
-  // Nose facets
   addFacet(nose, midTop, midRight, [hr * 1.2, hg * 1.2, hb * 1.2, 1.0]);
   addFacet(nose, midLeft, midTop, [hr * 1.2, hg * 1.2, hb * 1.2, 1.0]);
   addFacet(nose, midRight, midBottom, darkPanel);
   addFacet(nose, midBottom, midLeft, darkPanel);
 
-  // Cockpit glass canopy
+  // Cockpit canopy
   const canopyTip = [0, 0.45, -2.8];
   const canopyPeak = [0, 0.85, -1.2];
   const canopyL = [-0.35, 0.4, -1.2];
@@ -106,15 +235,12 @@ export function buildStarfighterMesh(hullColor = [0.15, 0.18, 0.24], neonColor =
   const wingRootTrailL = [-0.85, 0.15, 2.2];
   const wingRootTrailR = [0.85, 0.15, 2.2];
 
-  // Upper wing surfaces
   addQuadFacet(wingRootLeadL, wingTipL, wingTrailL, wingRootTrailL, [hr * 1.1, hg * 1.1, hb * 1.1, 1.0]);
   addQuadFacet(wingRootLeadR, wingRootTrailR, wingTrailR, wingTipR, [hr * 1.1, hg * 1.1, hb * 1.1, 1.0]);
-
-  // Lower wing surfaces
   addQuadFacet(wingRootLeadL, wingRootTrailL, wingTrailL, wingTipL, darkPanel);
   addQuadFacet(wingRootLeadR, wingTipR, wingTrailR, wingRootTrailR, darkPanel);
 
-  // Wing Neon Energy Emitting Strips (glowing edges)
+  // Glowing neon leading edge
   const neonOffset = 0.03;
   const wingTipLNeon = [-4.65, 0.05 + neonOffset, 1.8];
   const wingRootLeadLNeon = [-0.85, 0.2 + neonOffset, -1.75];
@@ -124,7 +250,7 @@ export function buildStarfighterMesh(hullColor = [0.15, 0.18, 0.24], neonColor =
   const wingRootLeadRNeon = [0.85, 0.2 + neonOffset, -1.75];
   addQuadFacet(wingRootLeadR, wingTipR, wingTipRNeon, wingRootLeadRNeon, [nr, ng, nb, 1.0]);
 
-  // Wingtip vertical stabilizer fins
+  // Wingtip stabilizers
   const finTopL = [-4.5, 1.1, 2.4];
   const finTopR = [4.5, 1.1, 2.4];
   addFacet(wingTipL, finTopL, wingTrailL, [hr * 1.3, hg * 1.3, hb * 1.3, 1.0]);
@@ -151,15 +277,13 @@ export function buildStarfighterMesh(hullColor = [0.15, 0.18, 0.24], neonColor =
     addQuadFacet(tF2, tR2, tR3, tF3, darkPanel);
     addQuadFacet(tF3, tR3, tR4, tF4, darkPanel);
     addQuadFacet(tF4, tR4, tR1, tF1, darkPanel);
-
-    // Glowing exhaust nozzle ring
     addQuadFacet(tR1, tR4, tR3, tR2, exhaustColor);
   }
 
   addThruster(-1.1);
   addThruster(1.1);
 
-  // 4. FORWARD CANARD STABILIZERS
+  // 4. CANARD STABILIZERS
   const canardTipL = [-1.9, 0.25, -2.2];
   const canardTrailL = [-1.5, 0.25, -1.6];
   const canardRootL = [-0.5, 0.3, -2.1];
@@ -173,9 +297,6 @@ export function buildStarfighterMesh(hullColor = [0.15, 0.18, 0.24], neonColor =
   return mesh;
 }
 
-/**
- * Builds the animated rotating Quantum Core Rings (torus-like geometry)
- */
 export function buildRingMesh(radius = 1.2, tubeRadius = 0.08, segments = 24, tubeSegments = 6, color = [0.0, 0.9, 1.0, 0.9]) {
   const mesh = new MeshData();
 
@@ -216,10 +337,7 @@ export function buildRingMesh(radius = 1.2, tubeRadius = 0.08, segments = 24, tu
   return mesh;
 }
 
-/**
- * Builds the Hexagonal Warp Acceleration Gate mesh
- */
-export function buildHexGateMesh(radius = 12.0, thickness = 1.0, depth = 2.5, color = [0.0, 0.85, 1.0, 0.9]) {
+export function buildHexGateMesh(radius = 14.0, thickness = 1.4, depth = 3.0, color = [0.0, 0.85, 1.0, 0.9]) {
   const mesh = new MeshData();
   const sides = 6;
 
@@ -238,14 +356,12 @@ export function buildHexGateMesh(radius = 12.0, thickness = 1.0, depth = 2.5, co
     const zFront = depth * 0.5;
     const zBack = -depth * 0.5;
 
-    // Front face
     const f1 = mesh.addVertex(x0In, y0In, zFront, 0, 0, 1, ...color);
     const f2 = mesh.addVertex(x1In, y1In, zFront, 0, 0, 1, ...color);
     const f3 = mesh.addVertex(x1Out, y1Out, zFront, 0, 0, 1, ...color);
     const f4 = mesh.addVertex(x0Out, y0Out, zFront, 0, 0, 1, ...color);
     mesh.addQuad(f1, f2, f3, f4);
 
-    // Inner bevel face (intense neon glow)
     const b1 = mesh.addVertex(x0In, y0In, zFront, -Math.cos(a0), -Math.sin(a0), 0, color[0], color[1], color[2], 1.0);
     const b2 = mesh.addVertex(x0In, y0In, zBack, -Math.cos(a0), -Math.sin(a0), 0, color[0], color[1], color[2], 1.0);
     const b3 = mesh.addVertex(x1In, y1In, zBack, -Math.cos(a1), -Math.sin(a1), 0, color[0], color[1], color[2], 1.0);
@@ -256,9 +372,6 @@ export function buildHexGateMesh(radius = 12.0, thickness = 1.0, depth = 2.5, co
   return mesh;
 }
 
-/**
- * Builds floating deep-space Monolith / Cyber spire
- */
 export function buildMonolithMesh(w = 4.0, h = 30.0, d = 4.0, color = [0.08, 0.1, 0.15, 1.0], accentColor = [1.0, 0.35, 0.1, 1.0]) {
   const mesh = new MeshData();
   const hw = w * 0.5, hh = h * 0.5, hd = d * 0.5;
@@ -271,26 +384,20 @@ export function buildMonolithMesh(w = 4.0, h = 30.0, d = 4.0, color = [0.08, 0.1
     mesh.addQuad(i1, i2, i3, i4);
   }
 
-  // 4 vertical faces
   addFace([-hw, -hh, hd], [hw, -hh, hd], [hw, hh, hd], [-hw, hh, hd], [0, 0, 1], color);
   addFace([hw, -hh, -hd], [-hw, -hh, -hd], [-hw, hh, -hd], [hw, hh, -hd], [0, 0, -1], color);
   addFace([-hw, -hh, -hd], [-hw, -hh, hd], [-hw, hh, hd], [-hw, hh, -hd], [-1, 0, 0], color);
   addFace([hw, -hh, hd], [hw, -hh, -hd], [hw, hh, -hd], [hw, hh, hd], [1, 0, 0], color);
 
-  // Glowing cyber rune groove running down the front face
   const grooveW = 0.25;
   addFace([-grooveW, -hh, hd + 0.05], [grooveW, -hh, hd + 0.05], [grooveW, hh, hd + 0.05], [-grooveW, hh, hd + 0.05], [0, 0, 1], accentColor);
 
   return mesh;
 }
 
-/**
- * Builds dynamic Thruster Flame cone
- */
 export function buildFlameMesh(length = 3.5, radius = 0.45, segments = 12, flameColor = [0.0, 0.8, 1.0]) {
   const mesh = new MeshData();
   const [fr, fg, fb] = flameColor;
-
   const tipIndex = mesh.addVertex(0, 0, length, 0, 0, 1, fr, fg, fb, 0.0);
 
   for (let i = 0; i < segments; i++) {
@@ -311,10 +418,7 @@ export function buildFlameMesh(length = 3.5, radius = 0.45, segments = 12, flame
   return mesh;
 }
 
-/**
- * Procedural Starfield & Cosmic Dust generator (2,500 particles)
- */
-export function generateStarfieldData(count = 2500, spreadX = 140, spreadY = 90, spreadZ = 450) {
+export function generateStarfieldData(count = 2500, spreadX = 160, spreadY = 110, spreadZ = 550) {
   const positions = new Float32Array(count * 3);
   const colors = new Float32Array(count * 4);
   const sizes = new Float32Array(count);
@@ -330,23 +434,19 @@ export function generateStarfieldData(count = 2500, spreadX = 140, spreadY = 90,
     const brightness = 0.5 + Math.random() * 0.5;
     const tint = Math.random();
     if (tint < 0.6) {
-      // White-cyan star
       colors[colIdx] = 0.7 * brightness;
       colors[colIdx + 1] = 0.9 * brightness;
       colors[colIdx + 2] = 1.0 * brightness;
     } else if (tint < 0.85) {
-      // Violet nebula dust
       colors[colIdx] = 0.8 * brightness;
       colors[colIdx + 1] = 0.3 * brightness;
       colors[colIdx + 2] = 1.0 * brightness;
     } else {
-      // Gold pulsar
       colors[colIdx] = 1.0 * brightness;
       colors[colIdx + 1] = 0.7 * brightness;
       colors[colIdx + 2] = 0.2 * brightness;
     }
     colors[colIdx + 3] = brightness;
-
     sizes[i] = 1.5 + Math.random() * 3.5;
   }
 
@@ -368,12 +468,12 @@ export const SHIP_HOTSPOTS = [
       Coolant: 'Cryo-Liquid Helium',
       Phase: 'Active Resonance'
     },
-    description: 'Generates localized anti-gravity curvature and powers the dual hyperspace drives with zero thermal waste.'
+    description: 'Powers the spacecraft re-entry trajectory towards NASA Kennedy Space Center with zero thermal loss.'
   },
   {
     id: 'thruster',
     name: 'VECTOR EXHAUST ARRAY',
-    sub: 'Twin Mag-Lev Ion Propulsors',
+    sub: 'Twin Mag-Lev Propulsors',
     localPos: new Vec3(1.1, 0.1, 2.7),
     specs: {
       Thrust: '12.4 MegaNewtons',
@@ -381,32 +481,83 @@ export const SHIP_HOTSPOTS = [
       Gimbal: '±35° Dual Axis',
       Fuel: 'Metallic Hydrogen'
     },
-    description: 'High-thrust vectoring bells allow instantaneous pitch, yaw, and translation at near-luminal velocities.'
+    description: 'Vector bells calibrated for trans-atmospheric braking burn before Cape Canaveral touchdown.'
   },
   {
     id: 'cockpit',
-    name: 'NEURO-SYNC COCKPIT',
-    sub: 'Holographic Neural Cockpit Interface',
+    name: 'CREW COCKPIT BRIDGE',
+    sub: 'NASA Flight Deck & Life Support',
     localPos: new Vec3(0, 0.75, -1.2),
     specs: {
-      Latency: '< 0.12 ms',
-      Optics: 'Photonic Telemetry HUD',
-      LifeSupport: 'Atmosphere Class 1',
-      Ejection: 'Stasis Warp Pod'
+      Commander: 'Dhanesh',
+      CrewCount: '5 Active Personnel',
+      LifeSupport: 'Nominal 100%',
+      CommLink: 'Houston NASA Direct'
     },
-    description: 'Pilot consciousness links directly into the ship telemetry for reflex-speed dogfighting and trajectory plotting.'
+    description: 'Pressurized avionics bridge seating Dhanesh, Gayathri, Girinanda, Devika, and Sravan.'
   },
   {
     id: 'shields',
-    name: 'PHASE DEFLECTION MATRIX',
-    sub: 'Electromagnetic Flux Barrier',
+    name: 'RE-ENTRY ABLATIVE MATRIX',
+    sub: 'Electromagnetic Thermal Deflector',
     localPos: new Vec3(-3.2, 0.15, 1.2),
     specs: {
       Absorption: '850 GigaJoules',
-      Recharge: '4.2 sec',
-      Harmonic: 'Multi-Band Prism',
-      Coverage: '360° Spherical Bubble'
+      MaxTemp: '3,200 °C',
+      PlasmaBleed: '100% Polarized',
+      DescentPath: 'KSC Corridor 39A'
     },
-    description: 'Disperses kinetic micro-meteorites and high-energy particle beams across a polarized energy envelope.'
+    description: 'Protects the spacecraft and crew during hypersonic re-entry into Earth atmosphere.'
+  }
+];
+
+/**
+ * Crew Members Manifest
+ */
+export const CREW_MEMBERS = [
+  {
+    name: 'DHANESH',
+    role: 'MISSION COMMANDER',
+    specialty: 'Flight Deck & Master Telemetry',
+    status: '100% NOMINAL',
+    bpm: '68 BPM',
+    avatar: '👨‍🚀',
+    accent: '#00f0ff'
+  },
+  {
+    name: 'GAYATHRI',
+    role: 'CHIEF NAVIGATOR',
+    specialty: 'Orbital Mechanics & Earth Descent Vector',
+    status: '100% NOMINAL',
+    bpm: '71 BPM',
+    avatar: '👩‍🚀',
+    accent: '#00ff88'
+  },
+  {
+    name: 'GIRINANDA',
+    role: 'SYSTEMS ENGINEER',
+    specialty: 'Quantum Singularity & Power Grid',
+    status: '100% NOMINAL',
+    bpm: '74 BPM',
+    avatar: '👩‍🚀',
+    accent: '#ffaa00'
+  },
+  {
+    name: 'DEVIKA',
+    role: 'SCIENCE SPECIALIST',
+    specialty: 'Atmospheric Physics & Life Support',
+    status: '100% NOMINAL',
+    bpm: '65 BPM',
+    avatar: '👩‍🚀',
+    accent: '#bd00ff'
+  },
+  {
+    name: 'SRAVAN',
+    role: 'PROPULSION LEAD',
+    specialty: 'Vector Thrusters & NASA Touchdown Burn',
+    status: '100% NOMINAL',
+    bpm: '70 BPM',
+    avatar: '👨‍🚀',
+    accent: '#ff2a55'
   }
 ];

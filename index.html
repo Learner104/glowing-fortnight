@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CHRONO-7 // Quantum Cinematic Flight Experience</title>
+  <title>CHRONO-7 // NASA Mission & Crew Experience</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -15,6 +15,7 @@
   --neon-accent: #00f0ff;
   --neon-purple: #bd00ff;
   --neon-gold: #ffaa00;
+  --neon-green: #00ff88;
   --neon-red: #ff2a55;
   --text-main: #f0f4fc;
   --text-muted: #8a9bb8;
@@ -134,7 +135,17 @@ body.hyper-boost-active .cinema-grain {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 1.5rem 2rem 1.25rem 2rem;
+  padding: 1.25rem 2rem 1.25rem 2rem;
+  transition: opacity 0.3s ease;
+}
+
+/* Cinema View Mode (Press H) - Hides HUD elements for pure view */
+body.cinema-mode-active .hud-middle,
+body.cinema-mode-active #hotspots-layer,
+body.cinema-mode-active .hud-stat-pill,
+body.cinema-mode-active .nasa-destination-pill {
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 /* Top HUD Header */
@@ -142,13 +153,13 @@ body.hyper-boost-active .cinema-grain {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1.25rem;
   background: var(--bg-card);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 0.65rem 1.25rem;
+  padding: 0.6rem 1.25rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 240, 255, 0.1);
   pointer-events: auto;
 }
@@ -156,7 +167,7 @@ body.hyper-boost-active .cinema-grain {
 .hud-left {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: 1.1rem;
 }
 
 .rec-badge {
@@ -186,7 +197,7 @@ body.hyper-boost-active .cinema-grain {
 
 .timecode {
   font-family: var(--font-mono);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   color: var(--neon-accent);
@@ -194,13 +205,27 @@ body.hyper-boost-active .cinema-grain {
 }
 
 .system-title {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 600;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-muted);
   border-left: 1px solid rgba(255, 255, 255, 0.15);
-  padding-left: 1rem;
+  padding-left: 0.85rem;
+}
+
+.nasa-destination-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(0, 150, 255, 0.15);
+  border: 1px solid rgba(0, 150, 255, 0.4);
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: #66c2ff;
+  font-weight: 700;
 }
 
 .hud-center {
@@ -246,7 +271,61 @@ body.hyper-boost-active .cinema-grain {
 .hud-right {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: 0.75rem;
+}
+
+/* Header Toggle Buttons for Crew, Phase Info, and Cinema Mode */
+.hud-btn-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hud-btn-toggle:hover {
+  border-color: var(--neon-accent);
+  color: var(--neon-accent);
+}
+
+.hud-btn-toggle.active {
+  border-color: var(--neon-accent);
+  background: rgba(0, 240, 255, 0.15);
+  color: var(--neon-accent);
+}
+
+.btn-crew-toggle {
+  border-color: var(--neon-green);
+  color: var(--neon-green);
+  background: rgba(0, 255, 136, 0.12);
+}
+
+.btn-crew-toggle:hover {
+  background: var(--neon-green);
+  color: #05070d;
+  box-shadow: 0 0 14px var(--neon-green);
+}
+
+.vital-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--neon-green);
+  box-shadow: 0 0 8px var(--neon-green);
+  animation: pulse-green 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse-green {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
 }
 
 .audio-box {
@@ -256,7 +335,7 @@ body.hyper-boost-active .cinema-grain {
 }
 
 #audio-visualizer {
-  width: 70px;
+  width: 60px;
   height: 24px;
   background: rgba(0, 0, 0, 0.3);
   border-radius: 4px;
@@ -267,8 +346,8 @@ body.hyper-boost-active .cinema-grain {
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid var(--border-color);
   color: var(--neon-accent);
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -306,10 +385,136 @@ body.hyper-boost-active .cinema-grain {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 0;
+  padding: 0.75rem 0;
+  transition: opacity 0.3s ease;
 }
 
-/* Story Chapter Card */
+/* Crew Manifest UI Box (Pinned on Left) */
+.crew-manifest-panel {
+  position: absolute;
+  left: 0;
+  top: 1rem;
+  background: rgba(8, 12, 22, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 255, 136, 0.35);
+  border-radius: 8px;
+  padding: 1rem 1.15rem;
+  width: 290px;
+  pointer-events: auto;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 255, 136, 0.15);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 25;
+}
+
+.crew-manifest-panel.hidden {
+  opacity: 0;
+  transform: translateX(-20px);
+  pointer-events: none;
+  display: none;
+}
+
+.crew-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.crew-title {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.08em;
+}
+
+.crew-count-badge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--neon-green);
+  background: rgba(0, 255, 136, 0.15);
+  padding: 0.15rem 0.45rem;
+  border-radius: 3px;
+}
+
+.crew-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.crew-card {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  padding: 0.45rem 0.65rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.crew-card:hover {
+  background: rgba(0, 240, 255, 0.08);
+  border-color: var(--neon-accent);
+  transform: translateX(3px);
+}
+
+.crew-avatar {
+  font-size: 1.15rem;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.crew-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.crew-name-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.crew-name {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #ffffff;
+}
+
+.crew-bpm {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--neon-green);
+}
+
+.crew-role {
+  font-size: 0.65rem;
+  color: var(--neon-accent);
+  letter-spacing: 0.03em;
+}
+
+.crew-status-sub {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--text-muted);
+}
+
+/* Story Chapter Card - NOW HIDEABLE & COLLAPSIBLE */
 .chapter-card {
   position: relative;
   max-width: 420px;
@@ -318,10 +523,19 @@ body.hyper-boost-active .cinema-grain {
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--border-color);
   border-radius: 10px;
-  padding: 1.5rem 1.75rem;
+  padding: 1.4rem 1.6rem;
   pointer-events: auto;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 240, 255, 0.12);
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-left: auto;
+  margin-right: 2rem;
+}
+
+.chapter-card.hidden {
+  opacity: 0;
+  transform: translateY(20px) scale(0.95);
+  pointer-events: none;
+  display: none;
 }
 
 .chapter-card.fade-in {
@@ -331,6 +545,33 @@ body.hyper-boost-active .cinema-grain {
 @keyframes card-appear {
   0% { opacity: 0; transform: translateY(12px) scale(0.98); }
   100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.card-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.btn-card-close {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-muted);
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-card-close:hover {
+  background: rgba(255, 42, 85, 0.2);
+  border-color: var(--neon-red);
+  color: var(--neon-red);
 }
 
 .ch-badge {
@@ -344,50 +585,49 @@ body.hyper-boost-active .cinema-grain {
   border: 1px solid var(--neon-accent);
   padding: 0.2rem 0.6rem;
   border-radius: 4px;
-  margin-bottom: 0.6rem;
 }
 
 .ch-title {
-  font-size: 1.5rem;
+  font-size: 1.45rem;
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: #ffffff;
   line-height: 1.15;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.3rem;
 }
 
 .ch-subtitle {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 500;
   color: var(--neon-accent);
-  margin-bottom: 0.85rem;
+  margin-bottom: 0.75rem;
 }
 
 .ch-desc {
-  font-size: 0.85rem;
-  line-height: 1.5;
+  font-size: 0.83rem;
+  line-height: 1.45;
   color: var(--text-muted);
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.15rem;
 }
 
 .card-cta-row {
   display: flex;
   gap: 0.75rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.9rem;
 }
 
 .telem-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
+  gap: 0.45rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding-top: 0.85rem;
+  padding-top: 0.75rem;
 }
 
 .telem-item {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
 }
 
 .telem-key {
@@ -399,6 +639,40 @@ body.hyper-boost-active .cinema-grain {
   font-weight: 700;
 }
 
+/* Floating Restore Button when Phase Card is closed */
+.btn-restore-phase {
+  position: absolute;
+  right: 2rem;
+  bottom: 1rem;
+  background: var(--bg-card);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border-color);
+  color: var(--neon-accent);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.45rem 0.95rem;
+  border-radius: 6px;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.btn-restore-phase:hover {
+  background: var(--neon-accent);
+  color: #05070d;
+  box-shadow: 0 0 16px var(--neon-accent);
+}
+
+.btn-restore-phase.hidden {
+  display: none;
+}
+
 /* Flight Telemetry HUD Widget (Right side) */
 .flight-gauges {
   background: var(--bg-card);
@@ -406,10 +680,10 @@ body.hyper-boost-active .cinema-grain {
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 1.25rem;
+  padding: 1.15rem;
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.75rem;
   pointer-events: auto;
   min-width: 170px;
 }
@@ -417,7 +691,7 @@ body.hyper-boost-active .cinema-grain {
 .gauge-row {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.15rem;
 }
 
 .gauge-label {
@@ -429,7 +703,7 @@ body.hyper-boost-active .cinema-grain {
 
 .gauge-value {
   font-family: var(--font-mono);
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 800;
   color: var(--neon-accent);
 }
@@ -440,6 +714,7 @@ body.hyper-boost-active .cinema-grain {
   inset: 0;
   pointer-events: none;
   z-index: 5;
+  transition: opacity 0.3s ease;
 }
 
 .hotspot-marker {
@@ -524,13 +799,13 @@ body.hyper-boost-active .cinema-grain {
 .hud-footer {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.7rem;
   background: var(--bg-card);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-color);
   border-radius: 10px;
-  padding: 0.85rem 1.5rem;
+  padding: 0.8rem 1.4rem;
   box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 240, 255, 0.08);
   pointer-events: auto;
 }
@@ -646,20 +921,20 @@ body.hyper-boost-active .cinema-grain {
 .controls-left, .controls-right {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.85rem;
 }
 
 .btn-primary {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
   background: var(--neon-accent);
   color: #05070d;
   font-family: var(--font-mono);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.05em;
-  padding: 0.55rem 1.25rem;
+  padding: 0.5rem 1.15rem;
   border-radius: 6px;
   border: none;
   cursor: pointer;
@@ -686,14 +961,14 @@ body.hyper-boost-active .cinema-grain {
 .btn-outline {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid var(--border-color);
   color: var(--text-main);
   font-family: var(--font-mono);
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  padding: 0.55rem 1rem;
+  padding: 0.5rem 0.9rem;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -707,11 +982,11 @@ body.hyper-boost-active .cinema-grain {
 
 .scroll-hint {
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: var(--text-muted);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
 }
 
 .mouse-icon {
@@ -858,13 +1133,13 @@ body.hyper-boost-active .cinema-grain {
 .flyout-panel {
   position: fixed;
   right: 2rem;
-  top: 5.5rem;
+  top: 5.2rem;
   z-index: 50;
-  width: 320px;
+  width: 310px;
   background: #090e1a;
   border: 1px solid var(--border-color);
   border-radius: 10px;
-  padding: 1.5rem;
+  padding: 1.35rem;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 24px rgba(0, 240, 255, 0.15);
 }
 
@@ -914,14 +1189,17 @@ body.hyper-boost-active .cinema-grain {
 /* Responsive adjustments */
 @media (max-width: 900px) {
   .ui-layer {
-    padding: 1rem;
+    padding: 0.85rem;
   }
-  .system-title, .flight-gauges {
+  .system-title, .flight-gauges, .nasa-destination-pill {
     display: none;
   }
   .chapter-card {
     max-width: 100%;
-    margin-right: 0;
+    margin: 0;
+  }
+  .crew-manifest-panel {
+    width: 260px;
   }
 }
 
@@ -954,6 +1232,9 @@ body.hyper-boost-active .cinema-grain {
           </div>
           <div class="timecode" id="timecode-display">TC 00:00:00:00</div>
           <div class="system-title">PROJECT CHRONO-7 // AEGIS QUANTUM FIGHTER</div>
+          <div class="nasa-destination-pill">
+            <span>🎯 DEST: NASA KSC</span>
+          </div>
         </div>
 
         <div class="hud-center">
@@ -965,8 +1246,18 @@ body.hyper-boost-active .cinema-grain {
         </div>
 
         <div class="hud-right">
+          <button class="hud-btn-toggle active" id="btn-toggle-phase-card" title="Toggle Flight Story Card [I]">
+            <span>📜 PHASE INFO</span>
+          </button>
+          <button class="hud-btn-toggle" id="btn-toggle-cinema-mode" title="Toggle Fullscreen Cinema Mode [H]">
+            <span>👁 CINEMA</span>
+          </button>
+          <button class="hud-btn-toggle btn-crew-toggle" id="btn-crew-toggle" title="Toggle Crew Manifest">
+            <div class="vital-dot"></div>
+            <span>CREW (5)</span>
+          </button>
           <div class="audio-box">
-            <canvas id="audio-visualizer" width="70" height="24"></canvas>
+            <canvas id="audio-visualizer" width="60" height="24"></canvas>
             <button class="icon-btn" id="btn-audio-toggle" title="Toggle Sound Synth [M]">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M11 5L6 9H2v6h4l5 4V5z"/>
@@ -978,14 +1269,35 @@ body.hyper-boost-active .cinema-grain {
         </div>
       </header>
 
-      <!-- Center Cinematic Story Card & Flight HUD -->
+      <!-- Center Cinematic Story Card, Crew Manifest, & Flight HUD -->
       <main class="hud-middle">
+        <!-- Left: Crew Manifest HUD Panel -->
+        <div class="crew-manifest-panel hidden" id="crew-manifest-panel">
+          <div class="crew-header">
+            <div>
+              <span class="crew-title">SPACECRAFT CREW</span>
+              <div style="font-size: 0.65rem; color: var(--text-muted);">MISSION NASA RETURN</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <span class="crew-count-badge">5/5 NOMINAL</span>
+              <button class="close-btn" id="btn-close-crew" style="font-size: 1.1rem; line-height: 0.8;">&times;</button>
+            </div>
+          </div>
+          <div class="crew-list" id="crew-roster-list">
+            <!-- Populated via JS: Dhanesh, Gayathri, Girinanda, Devika, Sravan -->
+          </div>
+        </div>
+
+        <!-- Center-Right: Flight Chapter Story Card (Hideable & Collapsible) -->
         <div class="chapter-card" id="chapter-info-card">
-          <span class="ch-badge" id="ch-badge">PHASE 01</span>
-          <h1 class="ch-title" id="ch-title">ORBITAL LAUNCH DEPARTURE</h1>
-          <h2 class="ch-subtitle" id="ch-subtitle">Valkyrie-VII pre-flight telemetry check & thruster ignition</h2>
+          <div class="card-top-bar">
+            <span class="ch-badge" id="ch-badge">PHASE 01</span>
+            <button class="btn-card-close" id="btn-close-chapter-card" title="Hide Flight Card [I]">&times;</button>
+          </div>
+          <h1 class="ch-title" id="ch-title">DEEP SPACE DEPARTURE</h1>
+          <h2 class="ch-subtitle" id="ch-subtitle">Crew Dhanesh, Gayathri, Girinanda, Devika, Sravan initiate Earth return burn</h2>
           <p class="ch-desc" id="ch-description">
-            Cold-start of the Zero-Point reactor. Anti-gravity repulsors disengage as sub-orbital thrusters spin up to baseline idle.
+            Cold-start of the Zero-Point reactor. Trajectory locked towards NASA Kennedy Space Center runway.
           </p>
           <div class="card-cta-row">
             <button class="btn-primary" id="btn-card-play">
@@ -997,6 +1309,13 @@ body.hyper-boost-active .cinema-grain {
           </div>
         </div>
 
+        <!-- Floating Restore Button when Phase Card is closed -->
+        <button class="btn-restore-phase hidden" id="btn-restore-phase" title="Show Flight Card [I]">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span>SHOW FLIGHT INFO [I]</span>
+        </button>
+
+        <!-- Right: Flight Telemetry Gauges -->
         <div class="flight-gauges">
           <div class="gauge-row">
             <span class="gauge-label">PROPULSION</span>
@@ -1007,12 +1326,12 @@ body.hyper-boost-active .cinema-grain {
             <span class="gauge-value" id="hud-gforce">1.0 G</span>
           </div>
           <div class="gauge-row">
-            <span class="gauge-label">PHASE SHIELD</span>
-            <span class="gauge-value" style="color: #00ff88;">100% OK</span>
+            <span class="gauge-label">DESTINATION</span>
+            <span class="gauge-value" style="color: #66c2ff; font-size: 0.85rem;">NASA KSC</span>
           </div>
           <div class="gauge-row">
-            <span class="gauge-label">NAV VECTOR</span>
-            <span class="gauge-value" style="color: var(--neon-gold);">084 // -Z</span>
+            <span class="gauge-label">CREW STATUS</span>
+            <span class="gauge-value" style="color: var(--neon-green); font-size: 0.85rem;">5 ACTIVE</span>
           </div>
         </div>
       </main>
@@ -1622,7 +1941,8 @@ class AudioSystem {
 
 // ===== js/scene.js =====
 /**
- * Scene: Procedural 3D Geometry for Starfighter, Warp Gates, Monoliths, and Starfield
+ * Scene: Procedural 3D Geometry for Starfighter, Planets (Earth, Mars, Moon),
+ * NASA Landing Facility, Warp Gates, Monoliths, and Starfield.
  */
 
 
@@ -1650,6 +1970,137 @@ class MeshData {
     this.indices.push(i1, i2, i3);
     this.indices.push(i1, i3, i4);
   }
+}
+
+/**
+ * Builds procedural low-load spheres for planets (Earth, Mars, Moon)
+ */
+function buildPlanetMesh(radius = 10.0, rings = 16, sectors = 16, type = 'earth') {
+  const mesh = new MeshData();
+
+  for (let r = 0; r <= rings; r++) {
+    const theta = (r * Math.PI) / rings;
+    const sinT = Math.sin(theta);
+    const cosT = Math.cos(theta);
+
+    for (let s = 0; s <= sectors; s++) {
+      const phi = (s * 2 * Math.PI) / sectors;
+      const cosP = Math.cos(phi);
+      const sinP = Math.sin(phi);
+
+      const nx = cosP * sinT;
+      const ny = cosT;
+      const nz = sinP * sinT;
+
+      const x = nx * radius;
+      const y = ny * radius;
+      const z = nz * radius;
+
+      // Color generation based on planet type
+      let cr = 0.5, cg = 0.5, cb = 0.5, ca = 1.0;
+
+      // Procedural noise approximation using sine harmonics
+      const noise = Math.sin(phi * 4.0) * Math.cos(theta * 3.0) + Math.sin(phi * 8.0 + theta * 5.0) * 0.4;
+
+      if (type === 'earth') {
+        if (Math.abs(ny) > 0.82) {
+          // Polar ice caps
+          cr = 0.92; cg = 0.96; cb = 1.0;
+        } else if (noise > 0.15) {
+          // Continents / Green & Sahara ochre
+          cr = 0.22 + noise * 0.2;
+          cg = 0.48 + noise * 0.15;
+          cb = 0.25;
+        } else if (noise > -0.05) {
+          // Swirling white clouds
+          cr = 0.88; cg = 0.92; cb = 0.98;
+        } else {
+          // Deep oceans
+          cr = 0.08; cg = 0.28; cb = 0.72;
+        }
+      } else if (type === 'mars') {
+        if (Math.abs(ny) > 0.86) {
+          // Mars North/South Polar Ice
+          cr = 0.95; cg = 0.92; cb = 0.92;
+        } else {
+          // Red-ochre Martian regolith and dark basalt maria
+          const darkMaria = noise > 0.2 ? 0.65 : 1.0;
+          cr = (0.85 + noise * 0.1) * darkMaria;
+          cg = (0.35 + noise * 0.08) * darkMaria;
+          cb = (0.18 + noise * 0.05) * darkMaria;
+        }
+      } else if (type === 'moon') {
+        // Lunar grey with crater maria
+        const mare = noise > 0.1 ? 0.55 : 0.78;
+        cr = mare + noise * 0.05;
+        cg = mare + noise * 0.05;
+        cb = mare * 1.05;
+      }
+
+      mesh.addVertex(x, y, z, nx, ny, nz, cr, cg, cb, ca);
+    }
+  }
+
+  for (let r = 0; r < rings; r++) {
+    for (let s = 0; s < sectors; s++) {
+      const first = r * (sectors + 1) + s;
+      const second = first + sectors + 1;
+
+      mesh.addTriangle(first, second, first + 1);
+      mesh.addTriangle(second, second + 1, first + 1);
+    }
+  }
+
+  return mesh;
+}
+
+/**
+ * Builds NASA Kennedy Space Center Landing Runway & Touchdown Guidance Grid
+ */
+function buildNasaRunwayMesh() {
+  const mesh = new MeshData();
+
+  // Runway strip: 24m wide, 140m long at destination
+  const rwW = 12.0;
+  const rwLen = 70.0;
+  const rwColor = [0.08, 0.10, 0.14, 1.0];
+  const lineCol = [0.0, 0.95, 1.0, 1.0];
+  const amberCol = [1.0, 0.7, 0.1, 1.0];
+
+  // Runway Tarmac plane
+  const i1 = mesh.addVertex(-rwW, -1.5, -rwLen, 0, 1, 0, ...rwColor);
+  const i2 = mesh.addVertex(rwW, -1.5, -rwLen, 0, 1, 0, ...rwColor);
+  const i3 = mesh.addVertex(rwW, -1.5, rwLen, 0, 1, 0, ...rwColor);
+  const i4 = mesh.addVertex(-rwW, -1.5, rwLen, 0, 1, 0, ...rwColor);
+  mesh.addQuad(i1, i2, i3, i4);
+
+  // Centerline Dashes
+  for (let z = -rwLen + 5; z < rwLen - 5; z += 12) {
+    const c1 = mesh.addVertex(-0.4, -1.48, z - 3, 0, 1, 0, ...lineCol);
+    const c2 = mesh.addVertex(0.4, -1.48, z - 3, 0, 1, 0, ...lineCol);
+    const c3 = mesh.addVertex(0.4, -1.48, z + 3, 0, 1, 0, ...lineCol);
+    const c4 = mesh.addVertex(-0.4, -1.48, z + 3, 0, 1, 0, ...lineCol);
+    mesh.addQuad(c1, c2, c3, c4);
+  }
+
+  // Runway Approach Edge Guidance Lights (dual rows of glowing beacons)
+  for (let z = -rwLen; z <= rwLen; z += 10) {
+    // Left edge light
+    const l1 = mesh.addVertex(-rwW - 0.3, -1.45, z - 0.4, 0, 1, 0, ...amberCol);
+    const l2 = mesh.addVertex(-rwW + 0.3, -1.45, z - 0.4, 0, 1, 0, ...amberCol);
+    const l3 = mesh.addVertex(-rwW + 0.3, -1.45, z + 0.4, 0, 1, 0, ...amberCol);
+    const l4 = mesh.addVertex(-rwW - 0.3, -1.45, z + 0.4, 0, 1, 0, ...amberCol);
+    mesh.addQuad(l1, l2, l3, l4);
+
+    // Right edge light
+    const r1 = mesh.addVertex(rwW - 0.3, -1.45, z - 0.4, 0, 1, 0, ...amberCol);
+    const r2 = mesh.addVertex(rwW + 0.3, -1.45, z - 0.4, 0, 1, 0, ...amberCol);
+    const r3 = mesh.addVertex(rwW + 0.3, -1.45, z + 0.4, 0, 1, 0, ...amberCol);
+    const r4 = mesh.addVertex(rwW - 0.3, -1.45, z + 0.4, 0, 1, 0, ...amberCol);
+    mesh.addQuad(r1, r2, r3, r4);
+  }
+
+  return mesh;
 }
 
 /**
@@ -1682,21 +2133,18 @@ function buildStarfighterMesh(hullColor = [0.15, 0.18, 0.24], neonColor = [0.0, 
   }
 
   // 1. NOSE CONE & MAIN FUSELAGE
-  // Nose tip
   const nose = [0, 0.1, -4.2];
-  // Mid body vertices
   const midTop = [0, 0.65, -0.6];
   const midLeft = [-0.9, 0.15, -0.4];
   const midRight = [0.9, 0.15, -0.4];
   const midBottom = [0, -0.35, -0.4];
 
-  // Nose facets
   addFacet(nose, midTop, midRight, [hr * 1.2, hg * 1.2, hb * 1.2, 1.0]);
   addFacet(nose, midLeft, midTop, [hr * 1.2, hg * 1.2, hb * 1.2, 1.0]);
   addFacet(nose, midRight, midBottom, darkPanel);
   addFacet(nose, midBottom, midLeft, darkPanel);
 
-  // Cockpit glass canopy
+  // Cockpit canopy
   const canopyTip = [0, 0.45, -2.8];
   const canopyPeak = [0, 0.85, -1.2];
   const canopyL = [-0.35, 0.4, -1.2];
@@ -1729,15 +2177,12 @@ function buildStarfighterMesh(hullColor = [0.15, 0.18, 0.24], neonColor = [0.0, 
   const wingRootTrailL = [-0.85, 0.15, 2.2];
   const wingRootTrailR = [0.85, 0.15, 2.2];
 
-  // Upper wing surfaces
   addQuadFacet(wingRootLeadL, wingTipL, wingTrailL, wingRootTrailL, [hr * 1.1, hg * 1.1, hb * 1.1, 1.0]);
   addQuadFacet(wingRootLeadR, wingRootTrailR, wingTrailR, wingTipR, [hr * 1.1, hg * 1.1, hb * 1.1, 1.0]);
-
-  // Lower wing surfaces
   addQuadFacet(wingRootLeadL, wingRootTrailL, wingTrailL, wingTipL, darkPanel);
   addQuadFacet(wingRootLeadR, wingTipR, wingTrailR, wingRootTrailR, darkPanel);
 
-  // Wing Neon Energy Emitting Strips (glowing edges)
+  // Glowing neon leading edge
   const neonOffset = 0.03;
   const wingTipLNeon = [-4.65, 0.05 + neonOffset, 1.8];
   const wingRootLeadLNeon = [-0.85, 0.2 + neonOffset, -1.75];
@@ -1747,7 +2192,7 @@ function buildStarfighterMesh(hullColor = [0.15, 0.18, 0.24], neonColor = [0.0, 
   const wingRootLeadRNeon = [0.85, 0.2 + neonOffset, -1.75];
   addQuadFacet(wingRootLeadR, wingTipR, wingTipRNeon, wingRootLeadRNeon, [nr, ng, nb, 1.0]);
 
-  // Wingtip vertical stabilizer fins
+  // Wingtip stabilizers
   const finTopL = [-4.5, 1.1, 2.4];
   const finTopR = [4.5, 1.1, 2.4];
   addFacet(wingTipL, finTopL, wingTrailL, [hr * 1.3, hg * 1.3, hb * 1.3, 1.0]);
@@ -1774,15 +2219,13 @@ function buildStarfighterMesh(hullColor = [0.15, 0.18, 0.24], neonColor = [0.0, 
     addQuadFacet(tF2, tR2, tR3, tF3, darkPanel);
     addQuadFacet(tF3, tR3, tR4, tF4, darkPanel);
     addQuadFacet(tF4, tR4, tR1, tF1, darkPanel);
-
-    // Glowing exhaust nozzle ring
     addQuadFacet(tR1, tR4, tR3, tR2, exhaustColor);
   }
 
   addThruster(-1.1);
   addThruster(1.1);
 
-  // 4. FORWARD CANARD STABILIZERS
+  // 4. CANARD STABILIZERS
   const canardTipL = [-1.9, 0.25, -2.2];
   const canardTrailL = [-1.5, 0.25, -1.6];
   const canardRootL = [-0.5, 0.3, -2.1];
@@ -1796,9 +2239,6 @@ function buildStarfighterMesh(hullColor = [0.15, 0.18, 0.24], neonColor = [0.0, 
   return mesh;
 }
 
-/**
- * Builds the animated rotating Quantum Core Rings (torus-like geometry)
- */
 function buildRingMesh(radius = 1.2, tubeRadius = 0.08, segments = 24, tubeSegments = 6, color = [0.0, 0.9, 1.0, 0.9]) {
   const mesh = new MeshData();
 
@@ -1839,10 +2279,7 @@ function buildRingMesh(radius = 1.2, tubeRadius = 0.08, segments = 24, tubeSegme
   return mesh;
 }
 
-/**
- * Builds the Hexagonal Warp Acceleration Gate mesh
- */
-function buildHexGateMesh(radius = 12.0, thickness = 1.0, depth = 2.5, color = [0.0, 0.85, 1.0, 0.9]) {
+function buildHexGateMesh(radius = 14.0, thickness = 1.4, depth = 3.0, color = [0.0, 0.85, 1.0, 0.9]) {
   const mesh = new MeshData();
   const sides = 6;
 
@@ -1861,14 +2298,12 @@ function buildHexGateMesh(radius = 12.0, thickness = 1.0, depth = 2.5, color = [
     const zFront = depth * 0.5;
     const zBack = -depth * 0.5;
 
-    // Front face
     const f1 = mesh.addVertex(x0In, y0In, zFront, 0, 0, 1, ...color);
     const f2 = mesh.addVertex(x1In, y1In, zFront, 0, 0, 1, ...color);
     const f3 = mesh.addVertex(x1Out, y1Out, zFront, 0, 0, 1, ...color);
     const f4 = mesh.addVertex(x0Out, y0Out, zFront, 0, 0, 1, ...color);
     mesh.addQuad(f1, f2, f3, f4);
 
-    // Inner bevel face (intense neon glow)
     const b1 = mesh.addVertex(x0In, y0In, zFront, -Math.cos(a0), -Math.sin(a0), 0, color[0], color[1], color[2], 1.0);
     const b2 = mesh.addVertex(x0In, y0In, zBack, -Math.cos(a0), -Math.sin(a0), 0, color[0], color[1], color[2], 1.0);
     const b3 = mesh.addVertex(x1In, y1In, zBack, -Math.cos(a1), -Math.sin(a1), 0, color[0], color[1], color[2], 1.0);
@@ -1879,9 +2314,6 @@ function buildHexGateMesh(radius = 12.0, thickness = 1.0, depth = 2.5, color = [
   return mesh;
 }
 
-/**
- * Builds floating deep-space Monolith / Cyber spire
- */
 function buildMonolithMesh(w = 4.0, h = 30.0, d = 4.0, color = [0.08, 0.1, 0.15, 1.0], accentColor = [1.0, 0.35, 0.1, 1.0]) {
   const mesh = new MeshData();
   const hw = w * 0.5, hh = h * 0.5, hd = d * 0.5;
@@ -1894,26 +2326,20 @@ function buildMonolithMesh(w = 4.0, h = 30.0, d = 4.0, color = [0.08, 0.1, 0.15,
     mesh.addQuad(i1, i2, i3, i4);
   }
 
-  // 4 vertical faces
   addFace([-hw, -hh, hd], [hw, -hh, hd], [hw, hh, hd], [-hw, hh, hd], [0, 0, 1], color);
   addFace([hw, -hh, -hd], [-hw, -hh, -hd], [-hw, hh, -hd], [hw, hh, -hd], [0, 0, -1], color);
   addFace([-hw, -hh, -hd], [-hw, -hh, hd], [-hw, hh, hd], [-hw, hh, -hd], [-1, 0, 0], color);
   addFace([hw, -hh, hd], [hw, -hh, -hd], [hw, hh, -hd], [hw, hh, hd], [1, 0, 0], color);
 
-  // Glowing cyber rune groove running down the front face
   const grooveW = 0.25;
   addFace([-grooveW, -hh, hd + 0.05], [grooveW, -hh, hd + 0.05], [grooveW, hh, hd + 0.05], [-grooveW, hh, hd + 0.05], [0, 0, 1], accentColor);
 
   return mesh;
 }
 
-/**
- * Builds dynamic Thruster Flame cone
- */
 function buildFlameMesh(length = 3.5, radius = 0.45, segments = 12, flameColor = [0.0, 0.8, 1.0]) {
   const mesh = new MeshData();
   const [fr, fg, fb] = flameColor;
-
   const tipIndex = mesh.addVertex(0, 0, length, 0, 0, 1, fr, fg, fb, 0.0);
 
   for (let i = 0; i < segments; i++) {
@@ -1934,10 +2360,7 @@ function buildFlameMesh(length = 3.5, radius = 0.45, segments = 12, flameColor =
   return mesh;
 }
 
-/**
- * Procedural Starfield & Cosmic Dust generator (2,500 particles)
- */
-function generateStarfieldData(count = 2500, spreadX = 140, spreadY = 90, spreadZ = 450) {
+function generateStarfieldData(count = 2500, spreadX = 160, spreadY = 110, spreadZ = 550) {
   const positions = new Float32Array(count * 3);
   const colors = new Float32Array(count * 4);
   const sizes = new Float32Array(count);
@@ -1953,23 +2376,19 @@ function generateStarfieldData(count = 2500, spreadX = 140, spreadY = 90, spread
     const brightness = 0.5 + Math.random() * 0.5;
     const tint = Math.random();
     if (tint < 0.6) {
-      // White-cyan star
       colors[colIdx] = 0.7 * brightness;
       colors[colIdx + 1] = 0.9 * brightness;
       colors[colIdx + 2] = 1.0 * brightness;
     } else if (tint < 0.85) {
-      // Violet nebula dust
       colors[colIdx] = 0.8 * brightness;
       colors[colIdx + 1] = 0.3 * brightness;
       colors[colIdx + 2] = 1.0 * brightness;
     } else {
-      // Gold pulsar
       colors[colIdx] = 1.0 * brightness;
       colors[colIdx + 1] = 0.7 * brightness;
       colors[colIdx + 2] = 0.2 * brightness;
     }
     colors[colIdx + 3] = brightness;
-
     sizes[i] = 1.5 + Math.random() * 3.5;
   }
 
@@ -1991,12 +2410,12 @@ const SHIP_HOTSPOTS = [
       Coolant: 'Cryo-Liquid Helium',
       Phase: 'Active Resonance'
     },
-    description: 'Generates localized anti-gravity curvature and powers the dual hyperspace drives with zero thermal waste.'
+    description: 'Powers the spacecraft re-entry trajectory towards NASA Kennedy Space Center with zero thermal loss.'
   },
   {
     id: 'thruster',
     name: 'VECTOR EXHAUST ARRAY',
-    sub: 'Twin Mag-Lev Ion Propulsors',
+    sub: 'Twin Mag-Lev Propulsors',
     localPos: new Vec3(1.1, 0.1, 2.7),
     specs: {
       Thrust: '12.4 MegaNewtons',
@@ -2004,33 +2423,84 @@ const SHIP_HOTSPOTS = [
       Gimbal: '±35° Dual Axis',
       Fuel: 'Metallic Hydrogen'
     },
-    description: 'High-thrust vectoring bells allow instantaneous pitch, yaw, and translation at near-luminal velocities.'
+    description: 'Vector bells calibrated for trans-atmospheric braking burn before Cape Canaveral touchdown.'
   },
   {
     id: 'cockpit',
-    name: 'NEURO-SYNC COCKPIT',
-    sub: 'Holographic Neural Cockpit Interface',
+    name: 'CREW COCKPIT BRIDGE',
+    sub: 'NASA Flight Deck & Life Support',
     localPos: new Vec3(0, 0.75, -1.2),
     specs: {
-      Latency: '< 0.12 ms',
-      Optics: 'Photonic Telemetry HUD',
-      LifeSupport: 'Atmosphere Class 1',
-      Ejection: 'Stasis Warp Pod'
+      Commander: 'Dhanesh',
+      CrewCount: '5 Active Personnel',
+      LifeSupport: 'Nominal 100%',
+      CommLink: 'Houston NASA Direct'
     },
-    description: 'Pilot consciousness links directly into the ship telemetry for reflex-speed dogfighting and trajectory plotting.'
+    description: 'Pressurized avionics bridge seating Dhanesh, Gayathri, Girinanda, Devika, and Sravan.'
   },
   {
     id: 'shields',
-    name: 'PHASE DEFLECTION MATRIX',
-    sub: 'Electromagnetic Flux Barrier',
+    name: 'RE-ENTRY ABLATIVE MATRIX',
+    sub: 'Electromagnetic Thermal Deflector',
     localPos: new Vec3(-3.2, 0.15, 1.2),
     specs: {
       Absorption: '850 GigaJoules',
-      Recharge: '4.2 sec',
-      Harmonic: 'Multi-Band Prism',
-      Coverage: '360° Spherical Bubble'
+      MaxTemp: '3,200 °C',
+      PlasmaBleed: '100% Polarized',
+      DescentPath: 'KSC Corridor 39A'
     },
-    description: 'Disperses kinetic micro-meteorites and high-energy particle beams across a polarized energy envelope.'
+    description: 'Protects the spacecraft and crew during hypersonic re-entry into Earth atmosphere.'
+  }
+];
+
+/**
+ * Crew Members Manifest
+ */
+const CREW_MEMBERS = [
+  {
+    name: 'DHANESH',
+    role: 'MISSION COMMANDER',
+    specialty: 'Flight Deck & Master Telemetry',
+    status: '100% NOMINAL',
+    bpm: '68 BPM',
+    avatar: '👨‍🚀',
+    accent: '#00f0ff'
+  },
+  {
+    name: 'GAYATHRI',
+    role: 'CHIEF NAVIGATOR',
+    specialty: 'Orbital Mechanics & Earth Descent Vector',
+    status: '100% NOMINAL',
+    bpm: '71 BPM',
+    avatar: '👩‍🚀',
+    accent: '#00ff88'
+  },
+  {
+    name: 'GIRINANDA',
+    role: 'SYSTEMS ENGINEER',
+    specialty: 'Quantum Singularity & Power Grid',
+    status: '100% NOMINAL',
+    bpm: '74 BPM',
+    avatar: '👩‍🚀',
+    accent: '#ffaa00'
+  },
+  {
+    name: 'DEVIKA',
+    role: 'SCIENCE SPECIALIST',
+    specialty: 'Atmospheric Physics & Life Support',
+    status: '100% NOMINAL',
+    bpm: '65 BPM',
+    avatar: '👩‍🚀',
+    accent: '#bd00ff'
+  },
+  {
+    name: 'SRAVAN',
+    role: 'PROPULSION LEAD',
+    specialty: 'Vector Thrusters & NASA Touchdown Burn',
+    status: '100% NOMINAL',
+    bpm: '70 BPM',
+    avatar: '👨‍🚀',
+    accent: '#ff2a55'
   }
 ];
 
@@ -2038,7 +2508,7 @@ const SHIP_HOTSPOTS = [
 // ===== js/webgl-renderer.js =====
 /**
  * WebGLRenderer: High-performance 3D WebGL Pipeline with Fresnel Shading,
- * Starfield Streaks, Dynamic Lighting, and 2D Hotspot Projection.
+ * Starfield Streaks, Dynamic Lighting, Animated Planets, and NASA Touchdown Facility.
  */
 
 
@@ -2106,7 +2576,7 @@ void main() {
   float spec = pow(max(dot(N, H), 0.0), 32.0);
   vec3 specular = spec * vec3(1.0, 1.0, 1.0) * 0.7;
 
-  // Fresnel Edge Glow for cybernetic look
+  // Fresnel Edge Glow for cybernetic look & planetary atmosphere
   float fresnel = pow(1.0 - max(dot(N, V), 0.0), 3.0);
   vec3 rimGlow = fresnel * uNeonColor * (0.8 + uScrollSpeed * 0.4);
 
@@ -2137,7 +2607,6 @@ void main() {
   vec4 viewPos = uView * vec4(aPosition, 1.0);
   gl_Position = uProjection * viewPos;
 
-  // Safe positive depth calculation to prevent negative point sizes or division by zero
   float depth = max(0.2, -viewPos.z);
   float streak = 1.0 + min(uScrollSpeed * 2.5, 6.0);
   gl_PointSize = clamp(aSize * (160.0 / depth) * streak * uPixelRatio, 1.5, 64.0);
@@ -2198,23 +2667,25 @@ class WebGLRenderer {
     this.quantumRingAngle1 = 0;
     this.quantumRingAngle2 = 0;
 
+    // Planet rotation angles
+    this.earthRot = 0;
+    this.marsRot = 0.5;
+    this.moonRot = 1.2;
+
     // Theme & palette
     this.neonColor = [0.0, 0.95, 1.0];
     this.hullColor = [0.15, 0.18, 0.24];
     this.fogColor = [0.02, 0.04, 0.08];
 
     // Gate positions along the flight runway
-    this.gateZPositions = [-25, -60, -110, -170, -240, -320, -410, -510];
+    this.gateZPositions = [-25, -60, -110, -170, -240];
 
     // Monoliths on side flanks
     this.monoliths = [
       { pos: new Vec3(-22, 0, -50), scale: new Vec3(1.2, 1.8, 1.2), rot: 0.3 },
       { pos: new Vec3(22, 5, -80), scale: new Vec3(1.5, 2.2, 1.5), rot: -0.4 },
       { pos: new Vec3(-28, -2, -140), scale: new Vec3(2.0, 3.0, 2.0), rot: 0.8 },
-      { pos: new Vec3(26, 8, -200), scale: new Vec3(1.8, 2.8, 1.8), rot: -0.7 },
-      { pos: new Vec3(-32, 10, -280), scale: new Vec3(2.5, 3.5, 2.5), rot: 1.1 },
-      { pos: new Vec3(35, -5, -360), scale: new Vec3(2.2, 4.0, 2.2), rot: -0.5 },
-      { pos: new Vec3(-24, 6, -460), scale: new Vec3(3.0, 4.5, 3.0), rot: 0.4 }
+      { pos: new Vec3(26, 8, -200), scale: new Vec3(1.8, 2.8, 1.8), rot: -0.7 }
     ];
 
     this.init();
@@ -2303,6 +2774,14 @@ class WebGLRenderer {
     this.gateVao = this.createMeshBuffer(buildHexGateMesh(14.0, 1.4, 3.0, [...this.neonColor, 0.9]));
     this.monolithVao = this.createMeshBuffer(buildMonolithMesh(5, 35, 5, [0.06, 0.08, 0.12, 1.0], this.neonColor));
     this.flameVao = this.createMeshBuffer(buildFlameMesh(3.8, 0.42, 16, this.neonColor));
+
+    // Decorative lightweight planets (~280 vertices each for zero PC load)
+    this.earthVao = this.createMeshBuffer(buildPlanetMesh(48.0, 18, 18, 'earth'));
+    this.marsVao = this.createMeshBuffer(buildPlanetMesh(13.0, 16, 16, 'mars'));
+    this.moonVao = this.createMeshBuffer(buildPlanetMesh(8.5, 16, 16, 'moon'));
+
+    // NASA Runway at final touchdown point
+    this.runwayVao = this.createMeshBuffer(buildNasaRunwayMesh());
   }
 
   updateCustomColors(hull, neon) {
@@ -2354,33 +2833,77 @@ class WebGLRenderer {
 
     const aspect = this.width / Math.max(1, this.height);
     const dynamicFov = this.cameraFov + (state.isBoosting ? 18 : 0) * (Math.PI / 180);
-    this.projMatrix.perspective(dynamicFov, aspect, 0.1, 800.0);
+    this.projMatrix.perspective(dynamicFov, aspect, 0.1, 950.0);
     this.viewMatrix.lookAt(this.cameraPos, this.cameraTarget, this.cameraUp);
 
-    // Compute ViewProj for 3D hotspots
     Mat4.multiplyMatrices(this.viewProjMatrix, this.projMatrix, this.viewMatrix);
 
     // 1. RENDER STARFIELD
     this.renderStarfield(state);
 
-    // 2. RENDER MONOLITHS & ENVIRONMENT
+    // 2. RENDER PROCEDURAL PLANETS (Earth, Mars, Moon)
+    this.renderPlanets(state);
+
+    // 3. RENDER MONOLITHS & ENVIRONMENT
     this.renderEnvironment(state);
 
-    // 3. RENDER WARP GATES
+    // 4. RENDER WARP GATES
     this.renderWarpGates(state);
 
-    // 4. RENDER STARFIGHTER
+    // 5. RENDER NASA RUNWAY COMPLEX
+    this.renderNasaRunway(state);
+
+    // 6. RENDER STARFIGHTER
     this.renderStarfighter(state);
 
     // Return projected hotspots for 2D UI overlay
     return this.calculateProjectedHotspots(state);
   }
 
+  renderPlanets(state) {
+    const gl = this.gl;
+    gl.useProgram(this.litProgram);
+
+    // Update gentle planet axial rotations
+    this.earthRot += 0.0008;
+    this.marsRot += 0.0012;
+    this.moonRot += 0.0005;
+
+    // A) MARS (Visible during Phase 2 orbital slingshot)
+    const marsMat = new Mat4();
+    marsMat.translate(45.0, 14.0, -135.0);
+    marsMat.rotateY(this.marsRot);
+    marsMat.rotateX(0.25);
+    this.drawMesh(this.marsVao, marsMat, 0.0);
+
+    // B) THE MOON (Visible during Phase 3 lunar bypass)
+    const moonMat = new Mat4();
+    moonMat.translate(-38.0, 16.0, -210.0);
+    moonMat.rotateY(this.moonRot);
+    this.drawMesh(this.moonVao, moonMat, 0.0);
+
+    // C) EARTH (Approached majestically during Phase 4 & 5 touchdown)
+    const earthMat = new Mat4();
+    earthMat.translate(0.0, -24.0, -370.0);
+    earthMat.rotateY(this.earthRot);
+    earthMat.rotateX(0.35); // 23.5° axial tilt
+    this.drawMesh(this.earthVao, earthMat, 0.0);
+  }
+
+  renderNasaRunway(state) {
+    const gl = this.gl;
+    gl.useProgram(this.litProgram);
+
+    // NASA Runway at final touchdown point (Z = -320)
+    const runwayMat = new Mat4();
+    runwayMat.translate(0.0, -0.6, -320.0);
+    this.drawMesh(this.runwayVao, runwayMat, 0.0);
+  }
+
   renderStarfield(state) {
     const gl = this.gl;
     gl.useProgram(this.pointsProgram);
 
-    // Bind Star buffers
     const pLoc = gl.getAttribLocation(this.pointsProgram, 'aPosition');
     const cLoc = gl.getAttribLocation(this.pointsProgram, 'aColor');
     const sLoc = gl.getAttribLocation(this.pointsProgram, 'aSize');
@@ -2397,7 +2920,6 @@ class WebGLRenderer {
     gl.bindBuffer(gl.ARRAY_BUFFER, this.starVao.sizeBuffer);
     gl.vertexAttribPointer(sLoc, 1, gl.FLOAT, false, 0, 0);
 
-    // Set uniforms
     gl.uniformMatrix4fv(gl.getUniformLocation(this.pointsProgram, 'uView'), false, this.viewMatrix.elements);
     gl.uniformMatrix4fv(gl.getUniformLocation(this.pointsProgram, 'uProjection'), false, this.projMatrix.elements);
     gl.uniform1f(gl.getUniformLocation(this.pointsProgram, 'uScrollSpeed'), Math.abs(state.scrollVelocity) + (state.isBoosting ? 3.5 : 0));
@@ -2433,7 +2955,6 @@ class WebGLRenderer {
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, vao.idxBuffer);
 
-    // Normal matrix
     const normMat = modelMatrix.clone();
 
     gl.uniformMatrix4fv(gl.getUniformLocation(this.litProgram, 'uModel'), false, modelMatrix.elements);
@@ -2446,8 +2967,8 @@ class WebGLRenderer {
     gl.uniform3f(gl.getUniformLocation(this.litProgram, 'uAmbientColor'), 0.22, 0.24, 0.32);
     gl.uniform3f(gl.getUniformLocation(this.litProgram, 'uNeonColor'), this.neonColor[0], this.neonColor[1], this.neonColor[2]);
     gl.uniform3f(gl.getUniformLocation(this.litProgram, 'uFogColor'), this.fogColor[0], this.fogColor[1], this.fogColor[2]);
-    gl.uniform1f(gl.getUniformLocation(this.litProgram, 'uFogNear'), 40.0);
-    gl.uniform1f(gl.getUniformLocation(this.litProgram, 'uFogFar'), 380.0);
+    gl.uniform1f(gl.getUniformLocation(this.litProgram, 'uFogNear'), 50.0);
+    gl.uniform1f(gl.getUniformLocation(this.litProgram, 'uFogFar'), 550.0);
     gl.uniform1f(gl.getUniformLocation(this.litProgram, 'uScrollSpeed'), scrollSpeed);
 
     gl.drawElements(gl.TRIANGLES, vao.indexCount, gl.UNSIGNED_SHORT, 0);
@@ -2461,7 +2982,6 @@ class WebGLRenderer {
     const gl = this.gl;
     gl.useProgram(this.litProgram);
 
-    // Monoliths along flight lane
     for (const m of this.monoliths) {
       const model = new Mat4();
       model.translate(m.pos.x, m.pos.y, m.pos.z);
@@ -2475,7 +2995,6 @@ class WebGLRenderer {
     const gl = this.gl;
     gl.useProgram(this.litProgram);
 
-    // Rotating hexagonal gates that the craft zooms through
     this.gateZPositions.forEach((zPos, index) => {
       const model = new Mat4();
       model.translate(0, 0, zPos);
@@ -2488,16 +3007,13 @@ class WebGLRenderer {
     const gl = this.gl;
     gl.useProgram(this.litProgram);
 
-    // Ship base world transform
     this.shipModelMatrix = new Mat4();
     this.shipModelMatrix.translate(state.shipPos.x, state.shipPos.y, state.shipPos.z);
 
-    // Steering roll, pitch, and yaw bank
     this.shipModelMatrix.rotateY(this.shipYaw);
     this.shipModelMatrix.rotateX(this.shipPitch);
     this.shipModelMatrix.rotateZ(this.shipRoll);
 
-    // Draw starfighter fuselage & wings
     this.drawMesh(this.shipVao, this.shipModelMatrix, Math.abs(state.scrollVelocity));
 
     // Spinning Quantum Core Rings around the hull
@@ -2533,14 +3049,12 @@ class WebGLRenderer {
     const w = this.width;
     const h = this.height;
 
-    // Full ModelViewProjection Matrix for the starfighter
     const mvp = new Mat4();
     Mat4.multiplyMatrices(mvp, this.viewProjMatrix, this.shipModelMatrix);
 
     for (const spot of SHIP_HOTSPOTS) {
       const proj = mvp.projectPoint(spot.localPos);
       if (proj && proj.visible) {
-        // Convert normalized device coords (-1..1) to screen pixels
         const screenX = (proj.x * 0.5 + 0.5) * w;
         const screenY = (-proj.y * 0.5 + 0.5) * h;
 
@@ -2565,6 +3079,7 @@ class WebGLRenderer {
 // ===== js/timeline.js =====
 /**
  * Timeline: Cinematic Camera Choreography & Physics-based Video Scroll Engine
+ * Featuring Smoothed Exponential Interpolation, Planet Flybys, and NASA Touchdown.
  */
 
 
@@ -2575,14 +3090,14 @@ const CHAPTERS = [
     timecode: '00:00:00:00',
     progress: 0.0,
     badge: 'PHASE 01',
-    title: 'ORBITAL LAUNCH DEPARTURE',
-    subtitle: 'Valkyrie-VII pre-flight telemetry check & thruster ignition sequence',
-    description: 'Cold-start of the Zero-Point reactor. Anti-gravity repulsors disengage as sub-orbital thrusters spin up to baseline idle.',
+    title: 'DEEP SPACE DEPARTURE',
+    subtitle: 'Crew Dhanesh, Gayathri, Girinanda, Devika, Sravan initiate Earth return burn',
+    description: 'Cold-start of the Zero-Point reactor. Anti-gravity repulsors disengage as sub-orbital thrusters spin up to align trajectory toward NASA Kennedy Space Center.',
     telemetry: {
-      ALTITUDE: '420.5 KM',
-      VELOCITY: '1,240 M/S',
-      REACTOR: 'ONLINE (98.4%)',
-      PRESSURE: '0.0001 BAR'
+      ORIGIN: 'ORBITAL DOCK',
+      DESTINATION: 'NASA KENNEDY',
+      CREW: '5/5 ACTIVE',
+      STATUS: 'DEPARTURE BURN'
     }
   },
   {
@@ -2590,14 +3105,14 @@ const CHAPTERS = [
     timecode: '00:00:15:18',
     progress: 0.25,
     badge: 'PHASE 02',
-    title: 'WARP TUNNEL ACCELERATION',
-    subtitle: 'Hexagonal gate resonance & trans-luminal corridor entry',
-    description: 'Engaging magnetic induction rings. Space-time curvature expands along vector -Z, creating an artificial gravitational slipstream.',
+    title: 'MARS GRAVITATIONAL SLINGSHOT',
+    subtitle: 'Hypersonic orbital acceleration corridor past the Red Planet',
+    description: 'Engaging magnetic induction rings. Space-time curvature expands along vector -Z, using Mars gravity well for trans-Earth injection.',
     telemetry: {
-      ALTITUDE: '1,850 KM',
-      VELOCITY: 'MACH 18.2',
-      CORRIDOR: 'LOCKED // GATES 1-8',
-      DEFLECTION: 'ACTIVE'
+      ALTITUDE: 'MARS ORBIT',
+      VELOCITY: 'MACH 24.2',
+      CORRIDOR: 'EARTH VECTOR',
+      GRAV_ASSIST: 'CONFIRMED'
     }
   },
   {
@@ -2605,14 +3120,14 @@ const CHAPTERS = [
     timecode: '00:00:30:12',
     progress: 0.50,
     badge: 'PHASE 03',
-    title: 'DEEP NEBULA MONOLITH',
-    subtitle: 'Orbital celestial sweep past ancient alien relativistic relays',
-    description: 'Wide cinematic pan around the starboard wing as high-energy cosmic radiation reflects off the composite stealth nanocoating.',
+    title: 'LUNAR BYPASS & EARTH SIGHTING',
+    subtitle: 'Passing the Moon // Visual acquisition of Earth & Cape Canaveral corridor',
+    description: 'Cinematic sweep past lunar maria as Earth looms in the frontal cockpit HUD. Communications link established with NASA Houston Mission Control.',
     telemetry: {
-      ALTITUDE: 'DEEP ORBIT',
-      VELOCITY: '0.12 C',
-      INTERFERENCE: '0.04% (NOMINAL)',
-      GRAV_WELL: 'STABLE'
+      LUNAR_DIST: '12,400 KM',
+      EARTH_BEACON: 'KSC-39A',
+      COMM_LINK: 'NASA HOUSTON',
+      TRAJECTORY: 'OPTIMAL'
     }
   },
   {
@@ -2620,14 +3135,14 @@ const CHAPTERS = [
     timecode: '00:00:45:06',
     progress: 0.75,
     badge: 'PHASE 04',
-    title: 'SINGULARITY OVERDRIVE',
-    subtitle: 'Polarized phase shield surge & hyper-thruster combustion',
-    description: 'All kinetic deflectors overcharged. Plasma nozzles expand to maximum aperture, emitting concentrated violet ion trails.',
+    title: 'ATMOSPHERIC RE-ENTRY BURN',
+    subtitle: 'Thermal phase shields engaged over North American airspace',
+    description: 'Hypersonic ionization creates a glowing plasma envelope. Specialist Devika and Lead Sravan vector braking thrusters to align with Florida landing strip.',
     telemetry: {
-      ALTITUDE: 'SUB-WARP 4',
-      VELOCITY: '0.88 C',
-      THERMAL: '8,400 K',
-      SHIELD_FLUX: 'MAXIMUM'
+      ALTITUDE: '64.5 KM',
+      VELOCITY: 'MACH 12.8',
+      HEAT_SHIELD: '2,650 °C',
+      APPROACH: 'FLORIDA PENINSULA'
     }
   },
   {
@@ -2635,21 +3150,21 @@ const CHAPTERS = [
     timecode: '00:01:00:00',
     progress: 1.0,
     badge: 'PHASE 05',
-    title: 'THE QUANTUM NEXUS',
-    subtitle: 'Arrival at command station // 360° tactical inspection & config',
-    description: 'Full docking lock confirmed. Systems enter passive surveillance mode. Subsystems ready for interactive diagnostics & configuration.',
+    title: 'NASA KENNEDY SPACE CENTER',
+    subtitle: 'Touchdown confirmed at NASA Shuttle Landing Facility // Welcome Home Crew',
+    description: 'Main gear touchdown on NASA KSC Runway 15/33. Commander Dhanesh, Navigator Gayathri, Engineer Girinanda, Specialist Devika, and Propulsion Lead Sravan have completed the mission successfully.',
     telemetry: {
-      ALTITUDE: 'NEXUS DOCK 07',
-      VELOCITY: '0.0 M/S (LOCKED)',
-      INTERFACE: 'DIAGNOSTIC 360',
-      STATUS: 'MISSION READY'
+      LOCATION: 'NASA KSC (FLORIDA)',
+      RUNWAY: 'SLF RUNWAY 15/33',
+      TOUCHDOWN: '100% SECURED',
+      CREW_STATUS: 'ALL 5 NOMINAL'
     }
   }
 ];
 
 // 5 Cinematic Camera Waypoints along the scroll track
 const CAMERA_KEYFRAMES = [
-  // 0: Phase 1 - Low angle heroic tilt
+  // 0: Phase 1 - Low angle heroic departure
   {
     scroll: 0.0,
     camPos: new Vec3(2.5, -0.6, 5.2),
@@ -2657,7 +3172,7 @@ const CAMERA_KEYFRAMES = [
     shipPos: new Vec3(0, 0, 0),
     fov: 46
   },
-  // 1: Phase 2 - High-speed rear chase camera
+  // 1: Phase 2 - High-speed rear chase camera past Mars
   {
     scroll: 0.25,
     camPos: new Vec3(0.0, 1.6, 6.8),
@@ -2665,7 +3180,7 @@ const CAMERA_KEYFRAMES = [
     shipPos: new Vec3(0, 0, -50),
     fov: 52
   },
-  // 2: Phase 3 - Sweeping side dynamic orbit
+  // 2: Phase 3 - Sweeping side dynamic orbit past the Moon
   {
     scroll: 0.50,
     camPos: new Vec3(-7.5, 3.2, 3.5),
@@ -2673,7 +3188,7 @@ const CAMERA_KEYFRAMES = [
     shipPos: new Vec3(0, 0, -120),
     fov: 48
   },
-  // 3: Phase 4 - Dramatic frontal face-to-face overcharge
+  // 3: Phase 4 - Dramatic frontal face-to-face Earth re-entry
   {
     scroll: 0.75,
     camPos: new Vec3(1.8, 1.2, -7.5),
@@ -2681,13 +3196,13 @@ const CAMERA_KEYFRAMES = [
     shipPos: new Vec3(0, 0, -220),
     fov: 50
   },
-  // 4: Phase 5 - Nexus elevated isometric 360 vantage
+  // 4: Phase 5 - NASA Runway touchdown elevation
   {
     scroll: 1.0,
-    camPos: new Vec3(5.0, 3.5, 6.2),
+    camPos: new Vec3(4.5, 2.2, 6.0),
     camTarget: new Vec3(0, 0.2, 0.0),
-    shipPos: new Vec3(0, 0, -320),
-    fov: 45
+    shipPos: new Vec3(0, -0.3, -320),
+    fov: 44
   }
 ];
 
@@ -2757,11 +3272,12 @@ class TimelineController {
   }
 
   update(dt) {
-    this.elapsedTime += dt;
+    const dtClamped = Math.min(dt, 0.05);
+    this.elapsedTime += dtClamped;
 
     // Autonomous video playback
     if (this.isPlaying && !this.isDraggingScrubber) {
-      const step = (dt * 0.06) * this.playbackSpeed;
+      const step = (dtClamped * 0.06) * this.playbackSpeed;
       this.targetProgress += step;
       if (this.targetProgress >= 1.0) {
         this.targetProgress = 1.0;
@@ -2774,24 +3290,27 @@ class TimelineController {
 
     // Boost acceleration
     if (this.isBoosting) {
-      this.targetProgress = clamp(this.targetProgress + dt * 0.15, 0.0, 1.0);
+      this.targetProgress = clamp(this.targetProgress + dtClamped * 0.15, 0.0, 1.0);
       if (this.onProgressSync) {
         this.onProgressSync(this.targetProgress);
       }
     }
 
-    // Silky smooth inertia damping
+    // Exponential smoothing for buttery 60+ FPS motion
     const prevProgress = this.currentProgress;
-    this.currentProgress += (this.targetProgress - this.currentProgress) * 0.1;
-    this.scrollVelocity = (this.currentProgress - prevProgress) / Math.max(dt, 0.001);
+    const smoothFactor = 1.0 - Math.exp(-8.5 * dtClamped);
+    this.currentProgress += (this.targetProgress - this.currentProgress) * smoothFactor;
+    this.scrollVelocity = (this.currentProgress - prevProgress) / Math.max(dtClamped, 0.001);
 
-    // Mouse smoothing
-    this.mouseX += (this.targetMouseX - this.mouseX) * 0.08;
-    this.mouseY += (this.targetMouseY - this.mouseY) * 0.08;
+    // Exponential mouse steering smoothing
+    const mouseSmooth = 1.0 - Math.exp(-7.5 * dtClamped);
+    this.mouseX += (this.targetMouseX - this.mouseX) * mouseSmooth;
+    this.mouseY += (this.targetMouseY - this.mouseY) * mouseSmooth;
 
     // Orbit angles smoothing
-    this.orbitYaw += (this.targetOrbitYaw - this.orbitYaw) * 0.1;
-    this.orbitPitch += (this.targetOrbitPitch - this.orbitPitch) * 0.1;
+    const orbitSmooth = 1.0 - Math.exp(-8.0 * dtClamped);
+    this.orbitYaw += (this.targetOrbitYaw - this.orbitYaw) * orbitSmooth;
+    this.orbitPitch += (this.targetOrbitPitch - this.orbitPitch) * orbitSmooth;
 
     // Check chapter transitions
     const newChapterIndex = this.getCurrentChapterIndex();
@@ -2833,41 +3352,39 @@ class TimelineController {
     const k3 = keys[Math.min(keys.length - 1, segIndex + 2)];
 
     const segDuration = k2.scroll - k1.scroll;
-    const localT = segDuration > 0.0001 ? (p - k1.scroll) / segDuration : 0;
-    const t = clamp(localT, 0, 1);
+    const rawT = segDuration > 0.0001 ? (p - k1.scroll) / segDuration : 0;
+    const t = clamp(rawT, 0, 1);
 
-    // Spline interpolated camera and target positions
+    // Smooth spline interpolated positions
     const camPos = catmullRomVec3(k0.camPos, k1.camPos, k2.camPos, k3.camPos, t);
     const camTarget = catmullRomVec3(k0.camTarget, k1.camTarget, k2.camTarget, k3.camTarget, t);
     const shipPos = catmullRomVec3(k0.shipPos, k1.shipPos, k2.shipPos, k3.shipPos, t);
 
-    // Subtle idle hover vibration
-    const idleHover = Math.sin(this.elapsedTime * 2.0) * 0.08;
+    // Subtle gentle engine hover vibration (diminishes on touchdown in Phase 5)
+    const hoverAmplitude = Math.max(0.01, 0.06 * (1.0 - Math.pow(p, 4.0)));
+    const idleHover = Math.sin(this.elapsedTime * 2.2) * hoverAmplitude;
     shipPos.y += idleHover;
 
     // Camera Mode overrides
     if (this.cameraMode === 'COCKPIT') {
-      // First-person cockpit camera placed inside starfighter
       camPos.set(shipPos.x, shipPos.y + 0.65, shipPos.z - 0.9);
       camTarget.set(shipPos.x + this.mouseX * 2.0, shipPos.y + 0.5 - this.mouseY * 1.5, shipPos.z - 15.0);
     } else if (this.cameraMode === 'ORBIT') {
-      // 360 degree orbital inspect camera
       const radius = 7.5;
       camPos.x = shipPos.x + Math.sin(this.orbitYaw) * Math.cos(this.orbitPitch) * radius;
       camPos.y = shipPos.y + Math.sin(this.orbitPitch) * radius;
       camPos.z = shipPos.z + Math.cos(this.orbitYaw) * Math.cos(this.orbitPitch) * radius;
       camTarget.copy(shipPos).add(new Vec3(0, 0.3, 0));
     } else {
-      // Chase / Cinematic mode with mouse parallax
       camPos.x += this.mouseX * 1.2;
       camPos.y += -this.mouseY * 0.8;
       camTarget.x += this.mouseX * 0.5;
     }
 
-    // Ship banking reactions
-    const roll = this.mouseX * -0.55 - this.scrollVelocity * 0.15;
-    const pitch = this.mouseY * 0.35 + (this.isBoosting ? -0.15 : 0) + Math.sin(this.elapsedTime * 2.0) * 0.02;
-    const yaw = this.mouseX * -0.3;
+    // Ship flight banking
+    const roll = this.mouseX * -0.5 - this.scrollVelocity * 0.12;
+    const pitch = this.mouseY * 0.32 + (this.isBoosting ? -0.15 : 0) + (p > 0.95 ? -0.05 : 0);
+    const yaw = this.mouseX * -0.28;
 
     return {
       camPos,
@@ -2883,7 +3400,7 @@ class TimelineController {
   }
 
   getTimecodeString() {
-    const totalFrames = Math.floor(this.currentProgress * 60 * 60); // 60 seconds * 60 FPS
+    const totalFrames = Math.floor(this.currentProgress * 60 * 60);
     const frames = totalFrames % 60;
     const totalSeconds = Math.floor(totalFrames / 60);
     const seconds = totalSeconds % 60;
@@ -2898,7 +3415,10 @@ class TimelineController {
 // ===== js/app.js =====
 /**
  * App: Master Controller & Interactive HUD Coordinator
+ * Integrated with Crew Manifest UI (Dhanesh, Gayathri, Girinanda, Devika, Sravan),
+ * NASA Destination Touchdown, and Collapsible/Hideable Phase Info Cards + Cinema Mode.
  */
+
 
 
 
@@ -2931,10 +3451,10 @@ const COLOR_PRESETS = [
     badgeColor: '#ff2a55'
   },
   {
-    name: 'TITANIUM PHANTOM',
+    name: 'NASA TITANIUM',
     hull: [0.45, 0.48, 0.52],
-    neon: [0.95, 0.98, 1.0],
-    badgeColor: '#ffffff'
+    neon: [0.0, 0.6, 1.0],
+    badgeColor: '#0099ff'
   }
 ];
 
@@ -2962,8 +3482,11 @@ class Application {
     this.audioWaveData = new Uint8Array(64);
     this.activeHotspotId = null;
     this.isSyncingScroll = false;
+    this.isPhaseCardVisible = true;
 
     this.initUI();
+    this.initCrewManifest();
+    this.initPhaseCardControls();
     this.bindEvents();
     this.setupTimelineScrubber();
     this.setupScrollSync();
@@ -2972,8 +3495,108 @@ class Application {
     requestAnimationFrame((t) => this.renderLoop(t));
   }
 
+  initCrewManifest() {
+    const listContainer = document.getElementById('crew-roster-list');
+    if (!listContainer) return;
+
+    listContainer.innerHTML = '';
+    CREW_MEMBERS.forEach((crew) => {
+      const card = document.createElement('div');
+      card.className = 'crew-card';
+      card.innerHTML = `
+        <div class="crew-avatar" style="border-color: ${crew.accent}">${crew.avatar}</div>
+        <div class="crew-info">
+          <div class="crew-name-row">
+            <span class="crew-name" style="color: ${crew.accent}">${crew.name}</span>
+            <span class="crew-bpm">♥ ${crew.bpm}</span>
+          </div>
+          <div class="crew-role">${crew.role}</div>
+          <div class="crew-status-sub">${crew.specialty}</div>
+        </div>
+      `;
+      card.addEventListener('click', () => {
+        this.audio.init();
+        this.audio.playHotspotChime();
+        card.style.transform = 'scale(1.04)';
+        setTimeout(() => { card.style.transform = ''; }, 180);
+      });
+      listContainer.appendChild(card);
+    });
+
+    const crewToggleBtn = document.getElementById('btn-crew-toggle');
+    const crewPanel = document.getElementById('crew-manifest-panel');
+    const closeCrew = document.getElementById('btn-close-crew');
+
+    if (crewToggleBtn && crewPanel) {
+      crewToggleBtn.addEventListener('click', () => {
+        this.audio.init();
+        this.audio.playUiClick();
+        crewPanel.classList.toggle('hidden');
+      });
+    }
+
+    if (closeCrew && crewPanel) {
+      closeCrew.addEventListener('click', () => {
+        this.audio.playUiClick();
+        crewPanel.classList.add('hidden');
+      });
+    }
+  }
+
+  initPhaseCardControls() {
+    const phaseCard = document.getElementById('chapter-info-card');
+    const closeCardBtn = document.getElementById('btn-close-chapter-card');
+    const toggleHeaderBtn = document.getElementById('btn-toggle-phase-card');
+    const restoreBtn = document.getElementById('btn-restore-phase');
+    const cinemaBtn = document.getElementById('btn-toggle-cinema-mode');
+
+    const setPhaseCardVisibility = (visible) => {
+      this.isPhaseCardVisible = visible;
+      if (phaseCard) {
+        phaseCard.classList.toggle('hidden', !visible);
+      }
+      if (restoreBtn) {
+        restoreBtn.classList.toggle('hidden', visible);
+      }
+      if (toggleHeaderBtn) {
+        toggleHeaderBtn.classList.toggle('active', visible);
+      }
+    };
+
+    if (closeCardBtn) {
+      closeCardBtn.addEventListener('click', () => {
+        this.audio.playUiClick();
+        setPhaseCardVisibility(false);
+      });
+    }
+
+    if (restoreBtn) {
+      restoreBtn.addEventListener('click', () => {
+        this.audio.init();
+        this.audio.playUiClick();
+        setPhaseCardVisibility(true);
+      });
+    }
+
+    if (toggleHeaderBtn) {
+      toggleHeaderBtn.addEventListener('click', () => {
+        this.audio.init();
+        this.audio.playUiClick();
+        setPhaseCardVisibility(!this.isPhaseCardVisible);
+      });
+    }
+
+    if (cinemaBtn) {
+      cinemaBtn.addEventListener('click', () => {
+        this.audio.init();
+        this.audio.playUiClick();
+        const isCinema = document.body.classList.toggle('cinema-mode-active');
+        cinemaBtn.classList.toggle('active', isCinema);
+      });
+    }
+  }
+
   initUI() {
-    // Populate chapter markers in scrubber
     const chapterMarksContainer = document.getElementById('scrubber-chapters');
     if (chapterMarksContainer) {
       chapterMarksContainer.innerHTML = '';
@@ -2996,7 +3619,6 @@ class Application {
       });
     }
 
-    // Populate theme presets in customizer panel
     const presetContainer = document.getElementById('color-preset-buttons');
     if (presetContainer) {
       presetContainer.innerHTML = '';
@@ -3019,17 +3641,14 @@ class Application {
       });
     }
 
-    // Connect timeline chapter change to HUD story cards
     this.timeline.onChapterChange = (chapter) => {
       this.updateChapterCard(chapter);
     };
 
-    // Initialize first chapter
     this.updateChapterCard(CHAPTERS[0]);
   }
 
   setupScrollSync() {
-    // Window scroll event drives the 3D cinematic timeline
     window.addEventListener('scroll', () => {
       if (this.isSyncingScroll) return;
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
@@ -3039,7 +3658,6 @@ class Application {
       }
     }, { passive: true });
 
-    // Timeline changes drive window.scrollY
     this.timeline.onProgressSync = (progress) => {
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
       if (maxScroll > 0) {
@@ -3056,9 +3674,11 @@ class Application {
     const card = document.getElementById('chapter-info-card');
     if (!card) return;
 
-    card.classList.remove('fade-in');
-    void card.offsetWidth; // Force CSS reflow
-    card.classList.add('fade-in');
+    if (this.isPhaseCardVisible) {
+      card.classList.remove('fade-in');
+      void card.offsetWidth;
+      card.classList.add('fade-in');
+    }
 
     document.getElementById('ch-badge').textContent = chapter.badge;
     document.getElementById('ch-title').textContent = chapter.title;
@@ -3111,7 +3731,6 @@ class Application {
   }
 
   bindEvents() {
-    // Wheel event for silky video scroll
     window.addEventListener('wheel', (e) => {
       this.audio.init();
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
@@ -3122,7 +3741,6 @@ class Application {
       }
     }, { passive: true });
 
-    // Touch swipe handling
     let touchStartY = 0;
     window.addEventListener('touchstart', (e) => {
       this.audio.init();
@@ -3141,7 +3759,6 @@ class Application {
       }
     }, { passive: true });
 
-    // Mouse movement for 3D parallax steering & free orbit
     let isOrbitDragging = false;
     let prevMouseX = 0;
     let prevMouseY = 0;
@@ -3172,7 +3789,6 @@ class Application {
       isOrbitDragging = false;
     });
 
-    // Keyboard Shortcuts
     window.addEventListener('keydown', (e) => {
       this.audio.init();
 
@@ -3183,6 +3799,13 @@ class Application {
         document.body.classList.add('hyper-boost-active');
       } else if (e.key === 'c' || e.key === 'C') {
         this.cycleCamera();
+      } else if (e.key === 'h' || e.key === 'H') {
+        const isCinema = document.body.classList.toggle('cinema-mode-active');
+        const cinemaBtn = document.getElementById('btn-toggle-cinema-mode');
+        if (cinemaBtn) cinemaBtn.classList.toggle('active', isCinema);
+      } else if (e.key === 'i' || e.key === 'I') {
+        const toggleBtn = document.getElementById('btn-toggle-phase-card');
+        if (toggleBtn) toggleBtn.click();
       } else if (e.key === 'm' || e.key === 'M') {
         this.toggleAudioMute();
       } else if (e.key >= '1' && e.key <= '5') {
@@ -3202,7 +3825,6 @@ class Application {
       }
     });
 
-    // Play / Pause Buttons
     const handlePlayToggle = () => {
       this.audio.init();
       const playing = this.timeline.togglePlay();
@@ -3224,7 +3846,6 @@ class Application {
     const cardPlayBtn = document.getElementById('btn-card-play');
     if (cardPlayBtn) cardPlayBtn.addEventListener('click', handlePlayToggle);
 
-    // Boost Button
     const boostBtn = document.getElementById('btn-hyper-boost');
     if (boostBtn) {
       const activateBoost = (e) => {
@@ -3246,7 +3867,6 @@ class Application {
       boostBtn.addEventListener('touchend', deactivateBoost);
     }
 
-    // Camera Mode Buttons
     document.querySelectorAll('[data-cam-mode]').forEach(btn => {
       btn.addEventListener('click', () => {
         this.audio.init();
@@ -3256,7 +3876,6 @@ class Application {
       });
     });
 
-    // Sound Mute Toggle
     const audioBtn = document.getElementById('btn-audio-toggle');
     if (audioBtn) {
       audioBtn.addEventListener('click', () => {
@@ -3265,7 +3884,6 @@ class Application {
       });
     }
 
-    // Customizer Modal Toggle
     const customizerToggle = document.getElementById('btn-toggle-customizer');
     const customizerPanel = document.getElementById('customizer-panel');
     const closeCustomizer = document.getElementById('btn-close-customizer');
@@ -3284,7 +3902,6 @@ class Application {
       });
     }
 
-    // Modal close for Hotspot Telemetry
     const closeDiag = document.getElementById('btn-close-diag');
     const diagModal = document.getElementById('diagnostic-modal');
     if (closeDiag && diagModal) {
@@ -3295,7 +3912,6 @@ class Application {
       });
     }
 
-    // Power allocation slider inside diagnostic modal
     const powerSlider = document.getElementById('diag-power-slider');
     const powerVal = document.getElementById('diag-power-val');
     if (powerSlider && powerVal) {
@@ -3331,10 +3947,9 @@ class Application {
   }
 
   renderLoop(timestamp) {
-    const dt = Math.min((timestamp - this.lastTime) / 1000, 0.1);
+    const dt = Math.min((timestamp - this.lastTime) / 1000, 0.05);
     this.lastTime = timestamp;
 
-    // Calculate FPS
     this.frameCount++;
     if (timestamp - this.fpsTimer >= 500) {
       const fps = Math.round((this.frameCount * 1000) / (timestamp - this.fpsTimer));
@@ -3343,25 +3958,19 @@ class Application {
       this.fpsTimer = timestamp;
     }
 
-    // 1. Update Timeline & Physics
     const camFrame = this.timeline.update(dt);
-
-    // 2. Update Audio Synthesizer
     this.audio.updateEngine(Math.abs(camFrame.velocity), camFrame.isBoosting);
 
-    // 3. Update WebGL Camera & Ship orientation
     this.renderer.cameraPos.copy(camFrame.camPos);
     this.renderer.cameraTarget.copy(camFrame.camTarget);
     this.renderer.shipRoll = camFrame.roll;
     this.renderer.shipPitch = camFrame.pitch;
     this.renderer.shipYaw = camFrame.yaw;
 
-    // Spin quantum core rings
     const ringSpeed = 1.8 + Math.abs(camFrame.velocity) * 3.0 + (camFrame.isBoosting ? 6.0 : 0);
     this.renderer.quantumRingAngle1 += dt * ringSpeed;
     this.renderer.quantumRingAngle2 += dt * (ringSpeed * 1.3);
 
-    // 4. Render 3D Scene
     const projectedHotspots = this.renderer.render({
       time: timestamp * 0.001,
       scrollVelocity: camFrame.velocity,
@@ -3369,13 +3978,8 @@ class Application {
       shipPos: camFrame.shipPos
     });
 
-    // 5. Update 2D Interactive Hotspots Overlay
     this.updateHotspotsUI(projectedHotspots);
-
-    // 6. Update HUD Elements
     this.updateHUD(camFrame);
-
-    // 7. Draw Audio Waveform Oscilloscope
     this.drawAudioVisualizer();
 
     requestAnimationFrame((t) => this.renderLoop(t));
@@ -3434,19 +4038,19 @@ class Application {
   }
 
   updateHUD(camFrame) {
-    // Video Timecode display
     const tcStr = this.timeline.getTimecodeString();
     document.getElementById('timecode-display').textContent = `TC ${tcStr}`;
 
-    // Timeline Scrubber Fill and Handle
     const pct = camFrame.progress * 100;
     const fill = document.getElementById('scrubber-fill');
     const handle = document.getElementById('scrubber-handle');
     if (fill) fill.style.width = `${pct}%`;
     if (handle) handle.style.left = `${pct}%`;
 
-    // Speedometer & G-Force
-    const machSpeed = (1.2 + camFrame.progress * 24.8 + (camFrame.isBoosting ? 18.5 : 0)).toFixed(1);
+    const baseMach = camFrame.progress < 0.8 ?
+      (1.2 + camFrame.progress * 26.5) :
+      Math.max(0.2, 22.4 * (1.0 - (camFrame.progress - 0.8) / 0.2));
+    const machSpeed = (baseMach + (camFrame.isBoosting ? 18.5 : 0)).toFixed(1);
     const speedEl = document.getElementById('hud-mach-speed');
     if (speedEl) speedEl.textContent = `MACH ${machSpeed}`;
 
@@ -3487,7 +4091,6 @@ class Application {
   }
 }
 
-// Bootstrap on DOM ready
 function startApplication() {
   if (!window.app) {
     window.app = new Application();

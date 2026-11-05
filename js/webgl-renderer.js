@@ -1,6 +1,6 @@
 /**
  * WebGLRenderer: High-performance 3D WebGL Pipeline with Fresnel Shading,
- * Starfield Streaks, Dynamic Lighting, and 2D Hotspot Projection.
+ * Starfield Streaks, Dynamic Lighting, Animated Planets, and NASA Touchdown Facility.
  */
 
 import { Mat4, Vec3 } from './math3d.js';
@@ -10,6 +10,8 @@ import {
   buildHexGateMesh,
   buildMonolithMesh,
   buildFlameMesh,
+  buildPlanetMesh,
+  buildNasaRunwayMesh,
   generateStarfieldData,
   SHIP_HOTSPOTS
 } from './scene.js';
@@ -76,7 +78,7 @@ void main() {
   float spec = pow(max(dot(N, H), 0.0), 32.0);
   vec3 specular = spec * vec3(1.0, 1.0, 1.0) * 0.7;
 
-  // Fresnel Edge Glow for cybernetic look
+  // Fresnel Edge Glow for cybernetic look & planetary atmosphere
   float fresnel = pow(1.0 - max(dot(N, V), 0.0), 3.0);
   vec3 rimGlow = fresnel * uNeonColor * (0.8 + uScrollSpeed * 0.4);
 
@@ -107,7 +109,6 @@ void main() {
   vec4 viewPos = uView * vec4(aPosition, 1.0);
   gl_Position = uProjection * viewPos;
 
-  // Safe positive depth calculation to prevent negative point sizes or division by zero
   float depth = max(0.2, -viewPos.z);
   float streak = 1.0 + min(uScrollSpeed * 2.5, 6.0);
   gl_PointSize = clamp(aSize * (160.0 / depth) * streak * uPixelRatio, 1.5, 64.0);
@@ -168,23 +169,25 @@ export class WebGLRenderer {
     this.quantumRingAngle1 = 0;
     this.quantumRingAngle2 = 0;
 
+    // Planet rotation angles
+    this.earthRot = 0;
+    this.marsRot = 0.5;
+    this.moonRot = 1.2;
+
     // Theme & palette
     this.neonColor = [0.0, 0.95, 1.0];
     this.hullColor = [0.15, 0.18, 0.24];
     this.fogColor = [0.02, 0.04, 0.08];
 
     // Gate positions along the flight runway
-    this.gateZPositions = [-25, -60, -110, -170, -240, -320, -410, -510];
+    this.gateZPositions = [-25, -60, -110, -170, -240];
 
     // Monoliths on side flanks
     this.monoliths = [
       { pos: new Vec3(-22, 0, -50), scale: new Vec3(1.2, 1.8, 1.2), rot: 0.3 },
       { pos: new Vec3(22, 5, -80), scale: new Vec3(1.5, 2.2, 1.5), rot: -0.4 },
       { pos: new Vec3(-28, -2, -140), scale: new Vec3(2.0, 3.0, 2.0), rot: 0.8 },
-      { pos: new Vec3(26, 8, -200), scale: new Vec3(1.8, 2.8, 1.8), rot: -0.7 },
-      { pos: new Vec3(-32, 10, -280), scale: new Vec3(2.5, 3.5, 2.5), rot: 1.1 },
-      { pos: new Vec3(35, -5, -360), scale: new Vec3(2.2, 4.0, 2.2), rot: -0.5 },
-      { pos: new Vec3(-24, 6, -460), scale: new Vec3(3.0, 4.5, 3.0), rot: 0.4 }
+      { pos: new Vec3(26, 8, -200), scale: new Vec3(1.8, 2.8, 1.8), rot: -0.7 }
     ];
 
     this.init();
@@ -273,6 +276,14 @@ export class WebGLRenderer {
     this.gateVao = this.createMeshBuffer(buildHexGateMesh(14.0, 1.4, 3.0, [...this.neonColor, 0.9]));
     this.monolithVao = this.createMeshBuffer(buildMonolithMesh(5, 35, 5, [0.06, 0.08, 0.12, 1.0], this.neonColor));
     this.flameVao = this.createMeshBuffer(buildFlameMesh(3.8, 0.42, 16, this.neonColor));
+
+    // Decorative lightweight planets (~280 vertices each for zero PC load)
+    this.earthVao = this.createMeshBuffer(buildPlanetMesh(48.0, 18, 18, 'earth'));
+    this.marsVao = this.createMeshBuffer(buildPlanetMesh(13.0, 16, 16, 'mars'));
+    this.moonVao = this.createMeshBuffer(buildPlanetMesh(8.5, 16, 16, 'moon'));
+
+    // NASA Runway at final touchdown point
+    this.runwayVao = this.createMeshBuffer(buildNasaRunwayMesh());
   }
 
   updateCustomColors(hull, neon) {
@@ -324,33 +335,77 @@ export class WebGLRenderer {
 
     const aspect = this.width / Math.max(1, this.height);
     const dynamicFov = this.cameraFov + (state.isBoosting ? 18 : 0) * (Math.PI / 180);
-    this.projMatrix.perspective(dynamicFov, aspect, 0.1, 800.0);
+    this.projMatrix.perspective(dynamicFov, aspect, 0.1, 950.0);
     this.viewMatrix.lookAt(this.cameraPos, this.cameraTarget, this.cameraUp);
 
-    // Compute ViewProj for 3D hotspots
     Mat4.multiplyMatrices(this.viewProjMatrix, this.projMatrix, this.viewMatrix);
 
     // 1. RENDER STARFIELD
     this.renderStarfield(state);
 
-    // 2. RENDER MONOLITHS & ENVIRONMENT
+    // 2. RENDER PROCEDURAL PLANETS (Earth, Mars, Moon)
+    this.renderPlanets(state);
+
+    // 3. RENDER MONOLITHS & ENVIRONMENT
     this.renderEnvironment(state);
 
-    // 3. RENDER WARP GATES
+    // 4. RENDER WARP GATES
     this.renderWarpGates(state);
 
-    // 4. RENDER STARFIGHTER
+    // 5. RENDER NASA RUNWAY COMPLEX
+    this.renderNasaRunway(state);
+
+    // 6. RENDER STARFIGHTER
     this.renderStarfighter(state);
 
     // Return projected hotspots for 2D UI overlay
     return this.calculateProjectedHotspots(state);
   }
 
+  renderPlanets(state) {
+    const gl = this.gl;
+    gl.useProgram(this.litProgram);
+
+    // Update gentle planet axial rotations
+    this.earthRot += 0.0008;
+    this.marsRot += 0.0012;
+    this.moonRot += 0.0005;
+
+    // A) MARS (Visible during Phase 2 orbital slingshot)
+    const marsMat = new Mat4();
+    marsMat.translate(45.0, 14.0, -135.0);
+    marsMat.rotateY(this.marsRot);
+    marsMat.rotateX(0.25);
+    this.drawMesh(this.marsVao, marsMat, 0.0);
+
+    // B) THE MOON (Visible during Phase 3 lunar bypass)
+    const moonMat = new Mat4();
+    moonMat.translate(-38.0, 16.0, -210.0);
+    moonMat.rotateY(this.moonRot);
+    this.drawMesh(this.moonVao, moonMat, 0.0);
+
+    // C) EARTH (Approached majestically during Phase 4 & 5 touchdown)
+    const earthMat = new Mat4();
+    earthMat.translate(0.0, -24.0, -370.0);
+    earthMat.rotateY(this.earthRot);
+    earthMat.rotateX(0.35); // 23.5° axial tilt
+    this.drawMesh(this.earthVao, earthMat, 0.0);
+  }
+
+  renderNasaRunway(state) {
+    const gl = this.gl;
+    gl.useProgram(this.litProgram);
+
+    // NASA Runway at final touchdown point (Z = -320)
+    const runwayMat = new Mat4();
+    runwayMat.translate(0.0, -0.6, -320.0);
+    this.drawMesh(this.runwayVao, runwayMat, 0.0);
+  }
+
   renderStarfield(state) {
     const gl = this.gl;
     gl.useProgram(this.pointsProgram);
 
-    // Bind Star buffers
     const pLoc = gl.getAttribLocation(this.pointsProgram, 'aPosition');
     const cLoc = gl.getAttribLocation(this.pointsProgram, 'aColor');
     const sLoc = gl.getAttribLocation(this.pointsProgram, 'aSize');
@@ -367,7 +422,6 @@ export class WebGLRenderer {
     gl.bindBuffer(gl.ARRAY_BUFFER, this.starVao.sizeBuffer);
     gl.vertexAttribPointer(sLoc, 1, gl.FLOAT, false, 0, 0);
 
-    // Set uniforms
     gl.uniformMatrix4fv(gl.getUniformLocation(this.pointsProgram, 'uView'), false, this.viewMatrix.elements);
     gl.uniformMatrix4fv(gl.getUniformLocation(this.pointsProgram, 'uProjection'), false, this.projMatrix.elements);
     gl.uniform1f(gl.getUniformLocation(this.pointsProgram, 'uScrollSpeed'), Math.abs(state.scrollVelocity) + (state.isBoosting ? 3.5 : 0));
@@ -403,7 +457,6 @@ export class WebGLRenderer {
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, vao.idxBuffer);
 
-    // Normal matrix
     const normMat = modelMatrix.clone();
 
     gl.uniformMatrix4fv(gl.getUniformLocation(this.litProgram, 'uModel'), false, modelMatrix.elements);
@@ -416,8 +469,8 @@ export class WebGLRenderer {
     gl.uniform3f(gl.getUniformLocation(this.litProgram, 'uAmbientColor'), 0.22, 0.24, 0.32);
     gl.uniform3f(gl.getUniformLocation(this.litProgram, 'uNeonColor'), this.neonColor[0], this.neonColor[1], this.neonColor[2]);
     gl.uniform3f(gl.getUniformLocation(this.litProgram, 'uFogColor'), this.fogColor[0], this.fogColor[1], this.fogColor[2]);
-    gl.uniform1f(gl.getUniformLocation(this.litProgram, 'uFogNear'), 40.0);
-    gl.uniform1f(gl.getUniformLocation(this.litProgram, 'uFogFar'), 380.0);
+    gl.uniform1f(gl.getUniformLocation(this.litProgram, 'uFogNear'), 50.0);
+    gl.uniform1f(gl.getUniformLocation(this.litProgram, 'uFogFar'), 550.0);
     gl.uniform1f(gl.getUniformLocation(this.litProgram, 'uScrollSpeed'), scrollSpeed);
 
     gl.drawElements(gl.TRIANGLES, vao.indexCount, gl.UNSIGNED_SHORT, 0);
@@ -431,7 +484,6 @@ export class WebGLRenderer {
     const gl = this.gl;
     gl.useProgram(this.litProgram);
 
-    // Monoliths along flight lane
     for (const m of this.monoliths) {
       const model = new Mat4();
       model.translate(m.pos.x, m.pos.y, m.pos.z);
@@ -445,7 +497,6 @@ export class WebGLRenderer {
     const gl = this.gl;
     gl.useProgram(this.litProgram);
 
-    // Rotating hexagonal gates that the craft zooms through
     this.gateZPositions.forEach((zPos, index) => {
       const model = new Mat4();
       model.translate(0, 0, zPos);
@@ -458,16 +509,13 @@ export class WebGLRenderer {
     const gl = this.gl;
     gl.useProgram(this.litProgram);
 
-    // Ship base world transform
     this.shipModelMatrix = new Mat4();
     this.shipModelMatrix.translate(state.shipPos.x, state.shipPos.y, state.shipPos.z);
 
-    // Steering roll, pitch, and yaw bank
     this.shipModelMatrix.rotateY(this.shipYaw);
     this.shipModelMatrix.rotateX(this.shipPitch);
     this.shipModelMatrix.rotateZ(this.shipRoll);
 
-    // Draw starfighter fuselage & wings
     this.drawMesh(this.shipVao, this.shipModelMatrix, Math.abs(state.scrollVelocity));
 
     // Spinning Quantum Core Rings around the hull
@@ -503,14 +551,12 @@ export class WebGLRenderer {
     const w = this.width;
     const h = this.height;
 
-    // Full ModelViewProjection Matrix for the starfighter
     const mvp = new Mat4();
     Mat4.multiplyMatrices(mvp, this.viewProjMatrix, this.shipModelMatrix);
 
     for (const spot of SHIP_HOTSPOTS) {
       const proj = mvp.projectPoint(spot.localPos);
       if (proj && proj.visible) {
-        // Convert normalized device coords (-1..1) to screen pixels
         const screenX = (proj.x * 0.5 + 0.5) * w;
         const screenY = (-proj.y * 0.5 + 0.5) * h;
 

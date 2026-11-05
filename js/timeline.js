@@ -1,5 +1,6 @@
 /**
  * Timeline: Cinematic Camera Choreography & Physics-based Video Scroll Engine
+ * Featuring Smoothed Exponential Interpolation, Planet Flybys, and NASA Touchdown.
  */
 
 import { Vec3, catmullRomVec3, clamp, lerp } from './math3d.js';
@@ -10,14 +11,14 @@ export const CHAPTERS = [
     timecode: '00:00:00:00',
     progress: 0.0,
     badge: 'PHASE 01',
-    title: 'ORBITAL LAUNCH DEPARTURE',
-    subtitle: 'Valkyrie-VII pre-flight telemetry check & thruster ignition sequence',
-    description: 'Cold-start of the Zero-Point reactor. Anti-gravity repulsors disengage as sub-orbital thrusters spin up to baseline idle.',
+    title: 'DEEP SPACE DEPARTURE',
+    subtitle: 'Crew Dhanesh, Gayathri, Girinanda, Devika, Sravan initiate Earth return burn',
+    description: 'Cold-start of the Zero-Point reactor. Anti-gravity repulsors disengage as sub-orbital thrusters spin up to align trajectory toward NASA Kennedy Space Center.',
     telemetry: {
-      ALTITUDE: '420.5 KM',
-      VELOCITY: '1,240 M/S',
-      REACTOR: 'ONLINE (98.4%)',
-      PRESSURE: '0.0001 BAR'
+      ORIGIN: 'ORBITAL DOCK',
+      DESTINATION: 'NASA KENNEDY',
+      CREW: '5/5 ACTIVE',
+      STATUS: 'DEPARTURE BURN'
     }
   },
   {
@@ -25,14 +26,14 @@ export const CHAPTERS = [
     timecode: '00:00:15:18',
     progress: 0.25,
     badge: 'PHASE 02',
-    title: 'WARP TUNNEL ACCELERATION',
-    subtitle: 'Hexagonal gate resonance & trans-luminal corridor entry',
-    description: 'Engaging magnetic induction rings. Space-time curvature expands along vector -Z, creating an artificial gravitational slipstream.',
+    title: 'MARS GRAVITATIONAL SLINGSHOT',
+    subtitle: 'Hypersonic orbital acceleration corridor past the Red Planet',
+    description: 'Engaging magnetic induction rings. Space-time curvature expands along vector -Z, using Mars gravity well for trans-Earth injection.',
     telemetry: {
-      ALTITUDE: '1,850 KM',
-      VELOCITY: 'MACH 18.2',
-      CORRIDOR: 'LOCKED // GATES 1-8',
-      DEFLECTION: 'ACTIVE'
+      ALTITUDE: 'MARS ORBIT',
+      VELOCITY: 'MACH 24.2',
+      CORRIDOR: 'EARTH VECTOR',
+      GRAV_ASSIST: 'CONFIRMED'
     }
   },
   {
@@ -40,14 +41,14 @@ export const CHAPTERS = [
     timecode: '00:00:30:12',
     progress: 0.50,
     badge: 'PHASE 03',
-    title: 'DEEP NEBULA MONOLITH',
-    subtitle: 'Orbital celestial sweep past ancient alien relativistic relays',
-    description: 'Wide cinematic pan around the starboard wing as high-energy cosmic radiation reflects off the composite stealth nanocoating.',
+    title: 'LUNAR BYPASS & EARTH SIGHTING',
+    subtitle: 'Passing the Moon // Visual acquisition of Earth & Cape Canaveral corridor',
+    description: 'Cinematic sweep past lunar maria as Earth looms in the frontal cockpit HUD. Communications link established with NASA Houston Mission Control.',
     telemetry: {
-      ALTITUDE: 'DEEP ORBIT',
-      VELOCITY: '0.12 C',
-      INTERFERENCE: '0.04% (NOMINAL)',
-      GRAV_WELL: 'STABLE'
+      LUNAR_DIST: '12,400 KM',
+      EARTH_BEACON: 'KSC-39A',
+      COMM_LINK: 'NASA HOUSTON',
+      TRAJECTORY: 'OPTIMAL'
     }
   },
   {
@@ -55,14 +56,14 @@ export const CHAPTERS = [
     timecode: '00:00:45:06',
     progress: 0.75,
     badge: 'PHASE 04',
-    title: 'SINGULARITY OVERDRIVE',
-    subtitle: 'Polarized phase shield surge & hyper-thruster combustion',
-    description: 'All kinetic deflectors overcharged. Plasma nozzles expand to maximum aperture, emitting concentrated violet ion trails.',
+    title: 'ATMOSPHERIC RE-ENTRY BURN',
+    subtitle: 'Thermal phase shields engaged over North American airspace',
+    description: 'Hypersonic ionization creates a glowing plasma envelope. Specialist Devika and Lead Sravan vector braking thrusters to align with Florida landing strip.',
     telemetry: {
-      ALTITUDE: 'SUB-WARP 4',
-      VELOCITY: '0.88 C',
-      THERMAL: '8,400 K',
-      SHIELD_FLUX: 'MAXIMUM'
+      ALTITUDE: '64.5 KM',
+      VELOCITY: 'MACH 12.8',
+      HEAT_SHIELD: '2,650 °C',
+      APPROACH: 'FLORIDA PENINSULA'
     }
   },
   {
@@ -70,21 +71,21 @@ export const CHAPTERS = [
     timecode: '00:01:00:00',
     progress: 1.0,
     badge: 'PHASE 05',
-    title: 'THE QUANTUM NEXUS',
-    subtitle: 'Arrival at command station // 360° tactical inspection & config',
-    description: 'Full docking lock confirmed. Systems enter passive surveillance mode. Subsystems ready for interactive diagnostics & configuration.',
+    title: 'NASA KENNEDY SPACE CENTER',
+    subtitle: 'Touchdown confirmed at NASA Shuttle Landing Facility // Welcome Home Crew',
+    description: 'Main gear touchdown on NASA KSC Runway 15/33. Commander Dhanesh, Navigator Gayathri, Engineer Girinanda, Specialist Devika, and Propulsion Lead Sravan have completed the mission successfully.',
     telemetry: {
-      ALTITUDE: 'NEXUS DOCK 07',
-      VELOCITY: '0.0 M/S (LOCKED)',
-      INTERFACE: 'DIAGNOSTIC 360',
-      STATUS: 'MISSION READY'
+      LOCATION: 'NASA KSC (FLORIDA)',
+      RUNWAY: 'SLF RUNWAY 15/33',
+      TOUCHDOWN: '100% SECURED',
+      CREW_STATUS: 'ALL 5 NOMINAL'
     }
   }
 ];
 
 // 5 Cinematic Camera Waypoints along the scroll track
 const CAMERA_KEYFRAMES = [
-  // 0: Phase 1 - Low angle heroic tilt
+  // 0: Phase 1 - Low angle heroic departure
   {
     scroll: 0.0,
     camPos: new Vec3(2.5, -0.6, 5.2),
@@ -92,7 +93,7 @@ const CAMERA_KEYFRAMES = [
     shipPos: new Vec3(0, 0, 0),
     fov: 46
   },
-  // 1: Phase 2 - High-speed rear chase camera
+  // 1: Phase 2 - High-speed rear chase camera past Mars
   {
     scroll: 0.25,
     camPos: new Vec3(0.0, 1.6, 6.8),
@@ -100,7 +101,7 @@ const CAMERA_KEYFRAMES = [
     shipPos: new Vec3(0, 0, -50),
     fov: 52
   },
-  // 2: Phase 3 - Sweeping side dynamic orbit
+  // 2: Phase 3 - Sweeping side dynamic orbit past the Moon
   {
     scroll: 0.50,
     camPos: new Vec3(-7.5, 3.2, 3.5),
@@ -108,7 +109,7 @@ const CAMERA_KEYFRAMES = [
     shipPos: new Vec3(0, 0, -120),
     fov: 48
   },
-  // 3: Phase 4 - Dramatic frontal face-to-face overcharge
+  // 3: Phase 4 - Dramatic frontal face-to-face Earth re-entry
   {
     scroll: 0.75,
     camPos: new Vec3(1.8, 1.2, -7.5),
@@ -116,13 +117,13 @@ const CAMERA_KEYFRAMES = [
     shipPos: new Vec3(0, 0, -220),
     fov: 50
   },
-  // 4: Phase 5 - Nexus elevated isometric 360 vantage
+  // 4: Phase 5 - NASA Runway touchdown elevation
   {
     scroll: 1.0,
-    camPos: new Vec3(5.0, 3.5, 6.2),
+    camPos: new Vec3(4.5, 2.2, 6.0),
     camTarget: new Vec3(0, 0.2, 0.0),
-    shipPos: new Vec3(0, 0, -320),
-    fov: 45
+    shipPos: new Vec3(0, -0.3, -320),
+    fov: 44
   }
 ];
 
@@ -192,11 +193,12 @@ export class TimelineController {
   }
 
   update(dt) {
-    this.elapsedTime += dt;
+    const dtClamped = Math.min(dt, 0.05);
+    this.elapsedTime += dtClamped;
 
     // Autonomous video playback
     if (this.isPlaying && !this.isDraggingScrubber) {
-      const step = (dt * 0.06) * this.playbackSpeed;
+      const step = (dtClamped * 0.06) * this.playbackSpeed;
       this.targetProgress += step;
       if (this.targetProgress >= 1.0) {
         this.targetProgress = 1.0;
@@ -209,24 +211,27 @@ export class TimelineController {
 
     // Boost acceleration
     if (this.isBoosting) {
-      this.targetProgress = clamp(this.targetProgress + dt * 0.15, 0.0, 1.0);
+      this.targetProgress = clamp(this.targetProgress + dtClamped * 0.15, 0.0, 1.0);
       if (this.onProgressSync) {
         this.onProgressSync(this.targetProgress);
       }
     }
 
-    // Silky smooth inertia damping
+    // Exponential smoothing for buttery 60+ FPS motion
     const prevProgress = this.currentProgress;
-    this.currentProgress += (this.targetProgress - this.currentProgress) * 0.1;
-    this.scrollVelocity = (this.currentProgress - prevProgress) / Math.max(dt, 0.001);
+    const smoothFactor = 1.0 - Math.exp(-8.5 * dtClamped);
+    this.currentProgress += (this.targetProgress - this.currentProgress) * smoothFactor;
+    this.scrollVelocity = (this.currentProgress - prevProgress) / Math.max(dtClamped, 0.001);
 
-    // Mouse smoothing
-    this.mouseX += (this.targetMouseX - this.mouseX) * 0.08;
-    this.mouseY += (this.targetMouseY - this.mouseY) * 0.08;
+    // Exponential mouse steering smoothing
+    const mouseSmooth = 1.0 - Math.exp(-7.5 * dtClamped);
+    this.mouseX += (this.targetMouseX - this.mouseX) * mouseSmooth;
+    this.mouseY += (this.targetMouseY - this.mouseY) * mouseSmooth;
 
     // Orbit angles smoothing
-    this.orbitYaw += (this.targetOrbitYaw - this.orbitYaw) * 0.1;
-    this.orbitPitch += (this.targetOrbitPitch - this.orbitPitch) * 0.1;
+    const orbitSmooth = 1.0 - Math.exp(-8.0 * dtClamped);
+    this.orbitYaw += (this.targetOrbitYaw - this.orbitYaw) * orbitSmooth;
+    this.orbitPitch += (this.targetOrbitPitch - this.orbitPitch) * orbitSmooth;
 
     // Check chapter transitions
     const newChapterIndex = this.getCurrentChapterIndex();
@@ -268,41 +273,39 @@ export class TimelineController {
     const k3 = keys[Math.min(keys.length - 1, segIndex + 2)];
 
     const segDuration = k2.scroll - k1.scroll;
-    const localT = segDuration > 0.0001 ? (p - k1.scroll) / segDuration : 0;
-    const t = clamp(localT, 0, 1);
+    const rawT = segDuration > 0.0001 ? (p - k1.scroll) / segDuration : 0;
+    const t = clamp(rawT, 0, 1);
 
-    // Spline interpolated camera and target positions
+    // Smooth spline interpolated positions
     const camPos = catmullRomVec3(k0.camPos, k1.camPos, k2.camPos, k3.camPos, t);
     const camTarget = catmullRomVec3(k0.camTarget, k1.camTarget, k2.camTarget, k3.camTarget, t);
     const shipPos = catmullRomVec3(k0.shipPos, k1.shipPos, k2.shipPos, k3.shipPos, t);
 
-    // Subtle idle hover vibration
-    const idleHover = Math.sin(this.elapsedTime * 2.0) * 0.08;
+    // Subtle gentle engine hover vibration (diminishes on touchdown in Phase 5)
+    const hoverAmplitude = Math.max(0.01, 0.06 * (1.0 - Math.pow(p, 4.0)));
+    const idleHover = Math.sin(this.elapsedTime * 2.2) * hoverAmplitude;
     shipPos.y += idleHover;
 
     // Camera Mode overrides
     if (this.cameraMode === 'COCKPIT') {
-      // First-person cockpit camera placed inside starfighter
       camPos.set(shipPos.x, shipPos.y + 0.65, shipPos.z - 0.9);
       camTarget.set(shipPos.x + this.mouseX * 2.0, shipPos.y + 0.5 - this.mouseY * 1.5, shipPos.z - 15.0);
     } else if (this.cameraMode === 'ORBIT') {
-      // 360 degree orbital inspect camera
       const radius = 7.5;
       camPos.x = shipPos.x + Math.sin(this.orbitYaw) * Math.cos(this.orbitPitch) * radius;
       camPos.y = shipPos.y + Math.sin(this.orbitPitch) * radius;
       camPos.z = shipPos.z + Math.cos(this.orbitYaw) * Math.cos(this.orbitPitch) * radius;
       camTarget.copy(shipPos).add(new Vec3(0, 0.3, 0));
     } else {
-      // Chase / Cinematic mode with mouse parallax
       camPos.x += this.mouseX * 1.2;
       camPos.y += -this.mouseY * 0.8;
       camTarget.x += this.mouseX * 0.5;
     }
 
-    // Ship banking reactions
-    const roll = this.mouseX * -0.55 - this.scrollVelocity * 0.15;
-    const pitch = this.mouseY * 0.35 + (this.isBoosting ? -0.15 : 0) + Math.sin(this.elapsedTime * 2.0) * 0.02;
-    const yaw = this.mouseX * -0.3;
+    // Ship flight banking
+    const roll = this.mouseX * -0.5 - this.scrollVelocity * 0.12;
+    const pitch = this.mouseY * 0.32 + (this.isBoosting ? -0.15 : 0) + (p > 0.95 ? -0.05 : 0);
+    const yaw = this.mouseX * -0.28;
 
     return {
       camPos,
@@ -318,7 +321,7 @@ export class TimelineController {
   }
 
   getTimecodeString() {
-    const totalFrames = Math.floor(this.currentProgress * 60 * 60); // 60 seconds * 60 FPS
+    const totalFrames = Math.floor(this.currentProgress * 60 * 60);
     const frames = totalFrames % 60;
     const totalSeconds = Math.floor(totalFrames / 60);
     const seconds = totalSeconds % 60;

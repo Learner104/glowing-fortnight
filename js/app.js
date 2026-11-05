@@ -1,10 +1,13 @@
 /**
  * App: Master Controller & Interactive HUD Coordinator
+ * Integrated with Crew Manifest UI (Dhanesh, Gayathri, Girinanda, Devika, Sravan),
+ * NASA Destination Touchdown, and Collapsible/Hideable Phase Info Cards + Cinema Mode.
  */
 
 import { AudioSystem } from './audio.js';
 import { WebGLRenderer } from './webgl-renderer.js';
 import { TimelineController, CHAPTERS } from './timeline.js';
+import { CREW_MEMBERS } from './scene.js';
 
 // Color Presets for Starfighter Customizer
 export const COLOR_PRESETS = [
@@ -33,10 +36,10 @@ export const COLOR_PRESETS = [
     badgeColor: '#ff2a55'
   },
   {
-    name: 'TITANIUM PHANTOM',
+    name: 'NASA TITANIUM',
     hull: [0.45, 0.48, 0.52],
-    neon: [0.95, 0.98, 1.0],
-    badgeColor: '#ffffff'
+    neon: [0.0, 0.6, 1.0],
+    badgeColor: '#0099ff'
   }
 ];
 
@@ -64,8 +67,11 @@ class Application {
     this.audioWaveData = new Uint8Array(64);
     this.activeHotspotId = null;
     this.isSyncingScroll = false;
+    this.isPhaseCardVisible = true;
 
     this.initUI();
+    this.initCrewManifest();
+    this.initPhaseCardControls();
     this.bindEvents();
     this.setupTimelineScrubber();
     this.setupScrollSync();
@@ -74,8 +80,108 @@ class Application {
     requestAnimationFrame((t) => this.renderLoop(t));
   }
 
+  initCrewManifest() {
+    const listContainer = document.getElementById('crew-roster-list');
+    if (!listContainer) return;
+
+    listContainer.innerHTML = '';
+    CREW_MEMBERS.forEach((crew) => {
+      const card = document.createElement('div');
+      card.className = 'crew-card';
+      card.innerHTML = `
+        <div class="crew-avatar" style="border-color: ${crew.accent}">${crew.avatar}</div>
+        <div class="crew-info">
+          <div class="crew-name-row">
+            <span class="crew-name" style="color: ${crew.accent}">${crew.name}</span>
+            <span class="crew-bpm">♥ ${crew.bpm}</span>
+          </div>
+          <div class="crew-role">${crew.role}</div>
+          <div class="crew-status-sub">${crew.specialty}</div>
+        </div>
+      `;
+      card.addEventListener('click', () => {
+        this.audio.init();
+        this.audio.playHotspotChime();
+        card.style.transform = 'scale(1.04)';
+        setTimeout(() => { card.style.transform = ''; }, 180);
+      });
+      listContainer.appendChild(card);
+    });
+
+    const crewToggleBtn = document.getElementById('btn-crew-toggle');
+    const crewPanel = document.getElementById('crew-manifest-panel');
+    const closeCrew = document.getElementById('btn-close-crew');
+
+    if (crewToggleBtn && crewPanel) {
+      crewToggleBtn.addEventListener('click', () => {
+        this.audio.init();
+        this.audio.playUiClick();
+        crewPanel.classList.toggle('hidden');
+      });
+    }
+
+    if (closeCrew && crewPanel) {
+      closeCrew.addEventListener('click', () => {
+        this.audio.playUiClick();
+        crewPanel.classList.add('hidden');
+      });
+    }
+  }
+
+  initPhaseCardControls() {
+    const phaseCard = document.getElementById('chapter-info-card');
+    const closeCardBtn = document.getElementById('btn-close-chapter-card');
+    const toggleHeaderBtn = document.getElementById('btn-toggle-phase-card');
+    const restoreBtn = document.getElementById('btn-restore-phase');
+    const cinemaBtn = document.getElementById('btn-toggle-cinema-mode');
+
+    const setPhaseCardVisibility = (visible) => {
+      this.isPhaseCardVisible = visible;
+      if (phaseCard) {
+        phaseCard.classList.toggle('hidden', !visible);
+      }
+      if (restoreBtn) {
+        restoreBtn.classList.toggle('hidden', visible);
+      }
+      if (toggleHeaderBtn) {
+        toggleHeaderBtn.classList.toggle('active', visible);
+      }
+    };
+
+    if (closeCardBtn) {
+      closeCardBtn.addEventListener('click', () => {
+        this.audio.playUiClick();
+        setPhaseCardVisibility(false);
+      });
+    }
+
+    if (restoreBtn) {
+      restoreBtn.addEventListener('click', () => {
+        this.audio.init();
+        this.audio.playUiClick();
+        setPhaseCardVisibility(true);
+      });
+    }
+
+    if (toggleHeaderBtn) {
+      toggleHeaderBtn.addEventListener('click', () => {
+        this.audio.init();
+        this.audio.playUiClick();
+        setPhaseCardVisibility(!this.isPhaseCardVisible);
+      });
+    }
+
+    if (cinemaBtn) {
+      cinemaBtn.addEventListener('click', () => {
+        this.audio.init();
+        this.audio.playUiClick();
+        const isCinema = document.body.classList.toggle('cinema-mode-active');
+        cinemaBtn.classList.toggle('active', isCinema);
+      });
+    }
+  }
+
   initUI() {
-    // Populate chapter markers in scrubber
     const chapterMarksContainer = document.getElementById('scrubber-chapters');
     if (chapterMarksContainer) {
       chapterMarksContainer.innerHTML = '';
@@ -98,7 +204,6 @@ class Application {
       });
     }
 
-    // Populate theme presets in customizer panel
     const presetContainer = document.getElementById('color-preset-buttons');
     if (presetContainer) {
       presetContainer.innerHTML = '';
@@ -121,17 +226,14 @@ class Application {
       });
     }
 
-    // Connect timeline chapter change to HUD story cards
     this.timeline.onChapterChange = (chapter) => {
       this.updateChapterCard(chapter);
     };
 
-    // Initialize first chapter
     this.updateChapterCard(CHAPTERS[0]);
   }
 
   setupScrollSync() {
-    // Window scroll event drives the 3D cinematic timeline
     window.addEventListener('scroll', () => {
       if (this.isSyncingScroll) return;
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
@@ -141,7 +243,6 @@ class Application {
       }
     }, { passive: true });
 
-    // Timeline changes drive window.scrollY
     this.timeline.onProgressSync = (progress) => {
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
       if (maxScroll > 0) {
@@ -158,9 +259,11 @@ class Application {
     const card = document.getElementById('chapter-info-card');
     if (!card) return;
 
-    card.classList.remove('fade-in');
-    void card.offsetWidth; // Force CSS reflow
-    card.classList.add('fade-in');
+    if (this.isPhaseCardVisible) {
+      card.classList.remove('fade-in');
+      void card.offsetWidth;
+      card.classList.add('fade-in');
+    }
 
     document.getElementById('ch-badge').textContent = chapter.badge;
     document.getElementById('ch-title').textContent = chapter.title;
@@ -213,7 +316,6 @@ class Application {
   }
 
   bindEvents() {
-    // Wheel event for silky video scroll
     window.addEventListener('wheel', (e) => {
       this.audio.init();
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
@@ -224,7 +326,6 @@ class Application {
       }
     }, { passive: true });
 
-    // Touch swipe handling
     let touchStartY = 0;
     window.addEventListener('touchstart', (e) => {
       this.audio.init();
@@ -243,7 +344,6 @@ class Application {
       }
     }, { passive: true });
 
-    // Mouse movement for 3D parallax steering & free orbit
     let isOrbitDragging = false;
     let prevMouseX = 0;
     let prevMouseY = 0;
@@ -274,7 +374,6 @@ class Application {
       isOrbitDragging = false;
     });
 
-    // Keyboard Shortcuts
     window.addEventListener('keydown', (e) => {
       this.audio.init();
 
@@ -285,6 +384,13 @@ class Application {
         document.body.classList.add('hyper-boost-active');
       } else if (e.key === 'c' || e.key === 'C') {
         this.cycleCamera();
+      } else if (e.key === 'h' || e.key === 'H') {
+        const isCinema = document.body.classList.toggle('cinema-mode-active');
+        const cinemaBtn = document.getElementById('btn-toggle-cinema-mode');
+        if (cinemaBtn) cinemaBtn.classList.toggle('active', isCinema);
+      } else if (e.key === 'i' || e.key === 'I') {
+        const toggleBtn = document.getElementById('btn-toggle-phase-card');
+        if (toggleBtn) toggleBtn.click();
       } else if (e.key === 'm' || e.key === 'M') {
         this.toggleAudioMute();
       } else if (e.key >= '1' && e.key <= '5') {
@@ -304,7 +410,6 @@ class Application {
       }
     });
 
-    // Play / Pause Buttons
     const handlePlayToggle = () => {
       this.audio.init();
       const playing = this.timeline.togglePlay();
@@ -326,7 +431,6 @@ class Application {
     const cardPlayBtn = document.getElementById('btn-card-play');
     if (cardPlayBtn) cardPlayBtn.addEventListener('click', handlePlayToggle);
 
-    // Boost Button
     const boostBtn = document.getElementById('btn-hyper-boost');
     if (boostBtn) {
       const activateBoost = (e) => {
@@ -348,7 +452,6 @@ class Application {
       boostBtn.addEventListener('touchend', deactivateBoost);
     }
 
-    // Camera Mode Buttons
     document.querySelectorAll('[data-cam-mode]').forEach(btn => {
       btn.addEventListener('click', () => {
         this.audio.init();
@@ -358,7 +461,6 @@ class Application {
       });
     });
 
-    // Sound Mute Toggle
     const audioBtn = document.getElementById('btn-audio-toggle');
     if (audioBtn) {
       audioBtn.addEventListener('click', () => {
@@ -367,7 +469,6 @@ class Application {
       });
     }
 
-    // Customizer Modal Toggle
     const customizerToggle = document.getElementById('btn-toggle-customizer');
     const customizerPanel = document.getElementById('customizer-panel');
     const closeCustomizer = document.getElementById('btn-close-customizer');
@@ -386,7 +487,6 @@ class Application {
       });
     }
 
-    // Modal close for Hotspot Telemetry
     const closeDiag = document.getElementById('btn-close-diag');
     const diagModal = document.getElementById('diagnostic-modal');
     if (closeDiag && diagModal) {
@@ -397,7 +497,6 @@ class Application {
       });
     }
 
-    // Power allocation slider inside diagnostic modal
     const powerSlider = document.getElementById('diag-power-slider');
     const powerVal = document.getElementById('diag-power-val');
     if (powerSlider && powerVal) {
@@ -433,10 +532,9 @@ class Application {
   }
 
   renderLoop(timestamp) {
-    const dt = Math.min((timestamp - this.lastTime) / 1000, 0.1);
+    const dt = Math.min((timestamp - this.lastTime) / 1000, 0.05);
     this.lastTime = timestamp;
 
-    // Calculate FPS
     this.frameCount++;
     if (timestamp - this.fpsTimer >= 500) {
       const fps = Math.round((this.frameCount * 1000) / (timestamp - this.fpsTimer));
@@ -445,25 +543,19 @@ class Application {
       this.fpsTimer = timestamp;
     }
 
-    // 1. Update Timeline & Physics
     const camFrame = this.timeline.update(dt);
-
-    // 2. Update Audio Synthesizer
     this.audio.updateEngine(Math.abs(camFrame.velocity), camFrame.isBoosting);
 
-    // 3. Update WebGL Camera & Ship orientation
     this.renderer.cameraPos.copy(camFrame.camPos);
     this.renderer.cameraTarget.copy(camFrame.camTarget);
     this.renderer.shipRoll = camFrame.roll;
     this.renderer.shipPitch = camFrame.pitch;
     this.renderer.shipYaw = camFrame.yaw;
 
-    // Spin quantum core rings
     const ringSpeed = 1.8 + Math.abs(camFrame.velocity) * 3.0 + (camFrame.isBoosting ? 6.0 : 0);
     this.renderer.quantumRingAngle1 += dt * ringSpeed;
     this.renderer.quantumRingAngle2 += dt * (ringSpeed * 1.3);
 
-    // 4. Render 3D Scene
     const projectedHotspots = this.renderer.render({
       time: timestamp * 0.001,
       scrollVelocity: camFrame.velocity,
@@ -471,13 +563,8 @@ class Application {
       shipPos: camFrame.shipPos
     });
 
-    // 5. Update 2D Interactive Hotspots Overlay
     this.updateHotspotsUI(projectedHotspots);
-
-    // 6. Update HUD Elements
     this.updateHUD(camFrame);
-
-    // 7. Draw Audio Waveform Oscilloscope
     this.drawAudioVisualizer();
 
     requestAnimationFrame((t) => this.renderLoop(t));
@@ -536,19 +623,19 @@ class Application {
   }
 
   updateHUD(camFrame) {
-    // Video Timecode display
     const tcStr = this.timeline.getTimecodeString();
     document.getElementById('timecode-display').textContent = `TC ${tcStr}`;
 
-    // Timeline Scrubber Fill and Handle
     const pct = camFrame.progress * 100;
     const fill = document.getElementById('scrubber-fill');
     const handle = document.getElementById('scrubber-handle');
     if (fill) fill.style.width = `${pct}%`;
     if (handle) handle.style.left = `${pct}%`;
 
-    // Speedometer & G-Force
-    const machSpeed = (1.2 + camFrame.progress * 24.8 + (camFrame.isBoosting ? 18.5 : 0)).toFixed(1);
+    const baseMach = camFrame.progress < 0.8 ?
+      (1.2 + camFrame.progress * 26.5) :
+      Math.max(0.2, 22.4 * (1.0 - (camFrame.progress - 0.8) / 0.2));
+    const machSpeed = (baseMach + (camFrame.isBoosting ? 18.5 : 0)).toFixed(1);
     const speedEl = document.getElementById('hud-mach-speed');
     if (speedEl) speedEl.textContent = `MACH ${machSpeed}`;
 
@@ -589,7 +676,6 @@ class Application {
   }
 }
 
-// Bootstrap on DOM ready
 function startApplication() {
   if (!window.app) {
     window.app = new Application();
